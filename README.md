@@ -1,0 +1,1 @@
+# vtres60-blog
