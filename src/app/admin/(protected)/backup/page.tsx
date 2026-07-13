@@ -1,0 +1,2 @@
+import { AdminPageHeading } from "@/components/admin/page-heading";import { BackupManager } from "@/components/admin/backup-manager";import { backupFiles } from "@/services/operations/backup-service";
+export default function Page(){return <><AdminPageHeading eyebrow="Sistema" title="Backup" description="Exporte e restaure as coleções locais do portal em um formato versionado."/><BackupManager files={[...backupFiles]}/></>}

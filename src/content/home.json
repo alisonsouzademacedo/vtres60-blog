@@ -1,0 +1,107 @@
+{
+  "hero": {
+    "enabled": true,
+    "title": "Notícias da indústria.",
+    "highlightedText": "Contexto para decidir.",
+    "subtitle": "Curadoria e inteligência para líderes industriais.",
+    "primaryButton": {
+      "label": "Acompanhar notícias",
+      "url": "/noticias"
+    },
+    "secondaryButton": {
+      "label": "Receber o briefing diário",
+      "url": "/#newsletter"
+    },
+    "searchPlaceholder": "Pesquisar notícias, empresas, segmentos ou tecnologias...",
+    "visual": "grid-glow",
+    "background": "#07090e",
+    "textColor": "#f4f7fb",
+    "showSubtitle": false,
+    "showSearch": true,
+    "showPrimaryButton": true,
+    "showSecondaryButton": true
+  },
+  "featured": {
+    "enabled": true,
+    "eyebrow": "Destaque editorial",
+    "title": "O essencial, com contexto",
+    "subtitle": "",
+    "leadArticleSlug": "",
+    "sideArticleSlugs": [],
+    "button": {
+      "label": "Todas as notícias",
+      "url": "/noticias"
+    }
+  },
+  "latest": {
+    "enabled": true,
+    "eyebrow": "Agora no portal",
+    "title": "Últimas notícias",
+    "subtitle": "",
+    "postCount": 4,
+    "categoryFilter": "",
+    "order": "newest",
+    "layout": "editorial"
+  },
+  "segments": {
+    "enabled": true,
+    "eyebrow": "Navegue por setor",
+    "title": "Segmentos industriais",
+    "subtitle": "",
+    "order": [
+      "metalurgia",
+      "plastico",
+      "textil",
+      "moveleiro",
+      "maquinas",
+      "automotivo",
+      "quimico",
+      "alimentos",
+      "energia",
+      "agronegocio"
+    ],
+    "theme": "dark"
+  },
+  "agenda": {
+    "enabled": true,
+    "eyebrow": "Próximos encontros",
+    "title": "Agenda Industrial",
+    "subtitle": "",
+    "eventCount": 3,
+    "cta": {
+      "label": "Agenda completa",
+      "url": "/agenda"
+    }
+  },
+  "newsletter": {
+    "enabled": true,
+    "eyebrow": "Briefing Industrial",
+    "title": "Comece o dia sabendo o que realmente importa.",
+    "description": "Curadoria e interpretação para líderes que precisam decidir — não apenas acompanhar.",
+    "benefits": [
+      "Principais notícias da indústria",
+      "Tendências e oportunidades",
+      "Análises estratégicas",
+      "Movimentos do mercado"
+    ],
+    "fields": [
+      {
+        "name": "email",
+        "label": "Seu e-mail profissional",
+        "type": "email",
+        "placeholder": "Seu melhor e-mail profissional",
+        "required": true
+      }
+    ],
+    "buttonText": "Assinar Briefing Industrial",
+    "successMessage": "Inscrição recebida. Bem-vindo ao Briefing Industrial."
+  },
+  "modules": {
+    "radar": true,
+    "segmentFilter": true,
+    "intelligence": true,
+    "analysis": true,
+    "companies": true,
+    "market": true
+  }
+}

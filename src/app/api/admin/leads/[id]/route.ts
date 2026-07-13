@@ -1,0 +1,2 @@
+import { NextResponse } from "next/server";import { requireAdmin } from "@/lib/admin-api";import { apiError } from "@/lib/editorial-api";import { operationsRepository } from "@/services/operations";
+export async function DELETE(_:Request,{params}:{params:Promise<{id:string}>}){const denied=await requireAdmin();if(denied)return denied;const{id}=await params;return(await operationsRepository.deleteLead(id))?NextResponse.json({ok:true}):apiError(new Error("Lead não encontrado."),404)}

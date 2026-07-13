@@ -1,0 +1,25 @@
+node_modules
+.next
+out
+.env*
+!.env.example
+*.log
+.DS_Store
+.vercel
+*.tsbuildinfo
+
+# Fase 5 — deploy seguro no GitHub
+coverage/
+*.pem
+*.key
+*.crt
+.supabase/
+tmp/
+temp/
+test-results/
+playwright-report/
+vtres60-blog-deploy-backup-*/
+
+# Script pessoal de conexão SSH — expõe porta/usuário real do servidor de
+# produção; não é parte do código-fonte do blog, não deve ir a um repo público.
+conectar_VTRES60_v2.bat

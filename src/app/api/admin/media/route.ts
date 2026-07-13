@@ -1,0 +1,3 @@
+import { NextResponse } from "next/server";import { requireAdmin } from "@/lib/admin-api";import { operationsRepository } from "@/services/operations";import type { MediaAsset } from "@/types/operations";
+export async function GET(){const denied=await requireAdmin();return denied??NextResponse.json(await operationsRepository.listMedia())}
+export async function POST(request:Request){const denied=await requireAdmin();if(denied)return denied;const item=await operationsRepository.createMedia(await request.json() as Omit<MediaAsset,"id"|"createdAt"|"updatedAt">);return NextResponse.json(item,{status:201})}

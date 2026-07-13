@@ -1,0 +1,373 @@
+[
+  {
+    "id": "6d857f36-58c3-4f48-88e9-fbc387866969",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução agendada (RSS) concluída: Pauta descartada — não representa fato noticiável (not_newsworthy).",
+    "createdAt": "2026-07-13T08:00:12.297Z"
+  },
+  {
+    "id": "4a468ef0-5a94-436b-a6d5-90eb914208ff",
+    "action": "newsworthiness",
+    "module": "agente",
+    "description": "URL https://www.correiobraziliense.com.br/opiniao/2026/07/7459229-biorrefinaria-a-industria-que-pode-moldar-o-seculo-21.html | isNewsworthy=false | reason=O texto discute o potencial das biorrefinarias e a importância da transição para uma economia baseada em biomassa, mas não apresenta nenhum evento, dado ou mudança temporal identificável que caracterize uma notícia. | eventDateOrPeriod=null",
+    "createdAt": "2026-07-13T08:00:12.289Z"
+  },
+  {
+    "id": "af353ca8-6541-42ad-baec-c64fb575ae59",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução agendada (RSS) concluída: Pauta descartada — já existe post com esta fonte (exact_duplicate).",
+    "createdAt": "2026-07-12T20:00:07.433Z"
+  },
+  {
+    "id": "0193f6ab-dcf3-419a-afb0-dd405abb23bc",
+    "action": "dedupe_exato",
+    "module": "agente",
+    "description": "exact_duplicate: https://www.jornalcruzeiro.com.br/sorocaba/noticias/2026/07/762436-robos-recuperados-em-sorocaba-ultrapassam-500-e-reforcam-economia-circular-na-industria.html (normalizada: jornalcruzeiro.com.br/sorocaba/noticias/2026/07/762436-robos-recuperados-em-sorocaba-ultrapassam-500-e-reforcam-economia-circular-na-industria.html) já existe no post 5444f390-3535-4b95-9e6c-a8e9ff5dcca8 (status: published).",
+    "createdAt": "2026-07-12T20:00:07.425Z"
+  },
+  {
+    "id": "c44b7b92-a1cd-45c2-9ae7-ff594be862be",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução agendada (RSS) concluída: Pauta descartada — já existe post com esta fonte (exact_duplicate).",
+    "createdAt": "2026-07-12T08:00:09.341Z"
+  },
+  {
+    "id": "432ea468-4b7c-4fb2-9fe8-75fafcb5f8ac",
+    "action": "dedupe_exato",
+    "module": "agente",
+    "description": "exact_duplicate: https://www.jornalcruzeiro.com.br/sorocaba/noticias/2026/07/762436-robos-recuperados-em-sorocaba-ultrapassam-500-e-reforcam-economia-circular-na-industria.html (normalizada: jornalcruzeiro.com.br/sorocaba/noticias/2026/07/762436-robos-recuperados-em-sorocaba-ultrapassam-500-e-reforcam-economia-circular-na-industria.html) já existe no post 5444f390-3535-4b95-9e6c-a8e9ff5dcca8 (status: published).",
+    "createdAt": "2026-07-12T08:00:09.329Z"
+  },
+  {
+    "id": "0bdfeda2-0a99-44e0-a6f0-c2bc24752c7a",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução agendada (RSS) concluída: Publicado automaticamente com sucesso! — post 5444f390-3535-4b95-9e6c-a8e9ff5dcca8",
+    "createdAt": "2026-07-11T20:00:24.174Z"
+  },
+  {
+    "id": "bfedb398-76d7-4666-a926-94f1d56ae78d",
+    "action": "classificacao_taxonomia",
+    "module": "agente",
+    "description": "tags rejeitadas: [tag-sustentabilidade] | companies rejeitadas: [] | título: Crescimento do Retrofit de Robôs Industriais em Sorocaba Impulsiona Sustentabilidade e Redução de Custos",
+    "createdAt": "2026-07-11T20:00:24.097Z"
+  },
+  {
+    "id": "816fb869-0862-487c-9f93-98610c053665",
+    "action": "image_tier_success",
+    "module": "agente",
+    "description": "{\"tier\":\"pexels\",\"width\":2150,\"height\":1000,\"hash\":\"82a41b17aa7e5acdac70194c2a0bf0053b44831cd62e8dccb48753b850fe53c7\",\"signed\":false,\"bytes\":206414}",
+    "createdAt": "2026-07-11T20:00:24.017Z"
+  },
+  {
+    "id": "64492d5f-4526-4545-b314-a4f12042090a",
+    "action": "image_tier_start",
+    "module": "agente",
+    "description": "{\"tier\":\"pexels\"}",
+    "createdAt": "2026-07-11T20:00:19.067Z"
+  },
+  {
+    "id": "d117cbb6-2b6e-4b03-b41d-e5df46782cc9",
+    "action": "image_tier_failure",
+    "module": "agente",
+    "description": "{\"tier\":\"generated_replicate\",\"reason\":\"generation_failed\"}",
+    "createdAt": "2026-07-11T20:00:19.064Z"
+  },
+  {
+    "id": "2f913aab-e676-4e0b-9795-35ddd1928666",
+    "action": "image_tier_start",
+    "module": "agente",
+    "description": "{\"tier\":\"generated_replicate\"}",
+    "createdAt": "2026-07-11T20:00:17.928Z"
+  },
+  {
+    "id": "380c6260-7c85-4304-a924-182bc04a557d",
+    "action": "image_tier_failure",
+    "module": "agente",
+    "description": "{\"tier\":\"source_og\",\"reason\":\"resolution_too_low\"}",
+    "createdAt": "2026-07-11T20:00:17.925Z"
+  },
+  {
+    "id": "9a77819b-dd2a-44f0-b289-3346bd229fc5",
+    "action": "image_tier_start",
+    "module": "agente",
+    "description": "{\"tier\":\"source_og\",\"sourceUrl\":\"https://www.jornalcruzeiro.com.br/_midias/jpg/2026/07/07/800x600/1_abb_sorocaba-1681170.jpg\"}",
+    "createdAt": "2026-07-11T20:00:17.879Z"
+  },
+  {
+    "id": "1840fd60-f895-4403-a901-ebf8d3d4fdae",
+    "action": "newsworthiness",
+    "module": "agente",
+    "description": "URL https://www.jornalcruzeiro.com.br/sorocaba/noticias/2026/07/762436-robos-recuperados-em-sorocaba-ultrapassam-500-e-reforcam-economia-circular-na-industria.html | isNewsworthy=true | reason=A notícia é noticiável porque informa que a unidade da ABB Robotics em Sorocaba recuperou mais de 500 robôs industriais, representando um crescimento significativo em relação ao balanço anterior divulgado em novembro de 2025. | eventDateOrPeriod=null",
+    "createdAt": "2026-07-11T20:00:08.031Z"
+  },
+  {
+    "id": "79f98b85-88d4-45e6-8806-33c386db0791",
+    "action": "image_tier_success",
+    "module": "agente",
+    "description": "{\"tier\":\"pexels\",\"width\":2150,\"height\":1000,\"hash\":\"022576db7d6ea563683d8e4eac32a33436db2176aca5d50eda38315ea54693a0\",\"signed\":false,\"bytes\":174200}",
+    "createdAt": "2026-07-11T17:15:04.300Z"
+  },
+  {
+    "id": "4ed40fcd-cb91-4413-a96c-16d05a530eaa",
+    "action": "image_tier_start",
+    "module": "agente",
+    "description": "{\"tier\":\"pexels\"}",
+    "createdAt": "2026-07-11T17:15:02.650Z"
+  },
+  {
+    "id": "09b7b54a-c043-4665-a598-88149ab7f686",
+    "action": "image_tier_failure",
+    "module": "agente",
+    "description": "{\"tier\":\"generated_replicate\",\"reason\":\"generation_failed\"}",
+    "createdAt": "2026-07-11T17:15:02.647Z"
+  },
+  {
+    "id": "c23218cd-7d43-4377-b851-79cba65f4ec6",
+    "action": "image_tier_start",
+    "module": "agente",
+    "description": "{\"tier\":\"generated_replicate\"}",
+    "createdAt": "2026-07-11T17:15:01.453Z"
+  },
+  {
+    "id": "ec8d164f-429f-48a2-9ebf-9f9284f7b86b",
+    "action": "image_tier_failure",
+    "module": "agente",
+    "description": "{\"tier\":\"source_og\",\"reason\":\"missing_source_image\"}",
+    "createdAt": "2026-07-11T17:15:01.450Z"
+  },
+  {
+    "id": "68881f7c-a695-401a-9b12-20874210cf24",
+    "action": "newsworthiness",
+    "module": "agente",
+    "description": "URL https://example.com/fase5-dry-run-smoke-test-2026-07-11T17-14-54-209Z | isNewsworthy=true | reason=O texto descreve um acordo coletivo com reajuste salarial de 6% para 40 mil trabalhadores, assinado pelo Sindicato das Indústrias Metalúrgicas, com vigência a partir de 1º de agosto de 2026. | eventDateOrPeriod=1º de agosto de 2026",
+    "createdAt": "2026-07-11T17:14:56.721Z"
+  },
+  {
+    "id": "8ae43862-54e4-47a4-bd2e-8b44f785d5c9",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução agendada (RSS) concluída: Publicado automaticamente com sucesso! — post 56b20793-45cf-4a33-ab65-670f6a236375",
+    "createdAt": "2026-07-11T08:00:35.442Z"
+  },
+  {
+    "id": "e26b3c70-dcce-4d42-8d2e-c22f45b7fa30",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução agendada (RSS) concluída: Publicado automaticamente com sucesso! — post a19f6d3e-e46c-4d31-a4e9-9e0840333329",
+    "createdAt": "2026-07-10T20:00:37.655Z"
+  },
+  {
+    "id": "7bc769c3-ce20-4c5d-b761-c4d6221f9638",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução agendada (RSS) concluída: Publicado automaticamente com sucesso! — post ff3b9db5-6369-41ac-a1e2-82ed48c000e8",
+    "createdAt": "2026-07-10T08:00:19.769Z"
+  },
+  {
+    "id": "0f20a25b-7f31-4d9e-ab93-81998d73f968",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução agendada (RSS) concluída: Auditoria reprovou após todas as tentativas — salvo como rascunho para revisão de emergência. — post d060c383-4f79-4b1c-9578-0a428e5d4a9d",
+    "createdAt": "2026-07-09T20:01:30.235Z"
+  },
+  {
+    "id": "5781868f-f016-4530-8b28-368ffc82e1e2",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução agendada (RSS) concluída: Publicado automaticamente com sucesso! — post 4188ec03-a71b-4422-9e09-784099024879",
+    "createdAt": "2026-07-09T08:00:26.275Z"
+  },
+  {
+    "id": "75f7906b-5490-492a-8630-602989e3a752",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução agendada (RSS) concluída: Publicado automaticamente com sucesso! — post d61a32ff-ab4f-469d-959f-a25701143c35",
+    "createdAt": "2026-07-08T20:00:26.152Z"
+  },
+  {
+    "id": "5a738817-b907-47c1-9a6b-472c3b7e2f14",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução agendada (RSS) concluída: Publicado automaticamente com sucesso! — post 12f8204c-68c5-447f-9655-9871ef65e312",
+    "createdAt": "2026-07-08T08:00:19.193Z"
+  },
+  {
+    "id": "b1c8edaf-950c-45c0-9ec1-1f00a8664540",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução agendada (RSS) concluída: Auditoria reprovou após todas as tentativas — salvo como rascunho para revisão de emergência. — post 024dd189-67c3-4109-b869-244febe58eb7",
+    "createdAt": "2026-07-07T20:01:09.302Z"
+  },
+  {
+    "id": "be2ec2bc-b886-4db3-a9bb-3858f8f975ac",
+    "action": "captacao",
+    "module": "leads",
+    "description": "Novo lead captado: pornofoda@videosporno.com.",
+    "createdAt": "2026-07-07T18:38:41.080Z"
+  },
+  {
+    "id": "2cbececa-8501-46c9-9853-08c3b4fd9590",
+    "action": "captacao",
+    "module": "leads",
+    "description": "Novo lead captado: pornofoda@videosporno.com.",
+    "createdAt": "2026-07-07T18:38:40.932Z"
+  },
+  {
+    "id": "e9ebd405-c5e5-4cf5-93b2-9014bdc04a59",
+    "action": "captacao",
+    "module": "leads",
+    "description": "Novo lead captado: pornofoda@videosporno.com.",
+    "createdAt": "2026-07-07T18:38:40.790Z"
+  },
+  {
+    "id": "73521c88-8cda-4b78-b1ea-0ef830ce09da",
+    "action": "captacao",
+    "module": "leads",
+    "description": "Novo lead captado: pornofoda@videosporno.com.",
+    "createdAt": "2026-07-07T18:38:40.336Z"
+  },
+  {
+    "id": "5759db4e-376a-4288-9f93-b42082551135",
+    "action": "captacao",
+    "module": "leads",
+    "description": "Novo lead captado: pornofoda@videosporno.com.",
+    "createdAt": "2026-07-07T18:38:37.990Z"
+  },
+  {
+    "id": "a23ddace-b3c7-4ba9-9134-05abff02d847",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução agendada (RSS) concluída: Publicado automaticamente com sucesso! — post 6c2961a2-aefc-49c5-b5ec-8849a4addd1e",
+    "createdAt": "2026-07-07T08:00:21.104Z"
+  },
+  {
+    "id": "ada09ac4-9056-4bb2-ab1e-5a6a1fa1e50a",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução agendada (RSS) concluída: Publicado automaticamente com sucesso! — post a5bc4c5e-c87a-415b-9a57-db3708c23185",
+    "createdAt": "2026-07-07T02:24:15.715Z"
+  },
+  {
+    "id": "e60f5407-98f6-4305-860c-404fbe4063ae",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução agendada (RSS) concluída: Auditoria reprovou após todas as tentativas — salvo como rascunho para revisão de emergência. — post 2ff14491-b4c5-4a30-af40-3ab194e49338",
+    "createdAt": "2026-07-07T02:18:27.682Z"
+  },
+  {
+    "id": "bdc18a91-c5aa-4802-a64b-bc30fdfea8ec",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução manual (link direto: https://g1.globo.com/economia/agronegocios/noticia/2026/07/06/brasil-vai-aos-eua-tentar-barrar-tarifaco-de-trump-veja-os-argumentos-da-industria-e-do-agro.ghtml) concluída: Publicado automaticamente com sucesso! — post 24198c61-ce19-4b3e-b5ac-fe893458edd3",
+    "createdAt": "2026-07-07T02:06:43.231Z"
+  },
+  {
+    "id": "4664d242-05af-4f27-9bac-fd18d0d9b16c",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução manual (link direto: https://www.hostgator.com.br/blog/tendencias-ecommerce-2021/) concluída: Auditoria reprovou após todas as tentativas — salvo como rascunho para revisão de emergência. — post c5eddb62-a969-4bb5-8ff9-be27f70229bf",
+    "createdAt": "2026-07-07T02:00:44.935Z"
+  },
+  {
+    "id": "2afade9b-51ad-4bb4-9443-c1673e502ee1",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução manual (link direto: https://www.hostgator.com.br/blog/tendencias-ecommerce-2021/) concluída: Auditoria reprovou após todas as tentativas — salvo como rascunho para revisão de emergência. — post 13bedfe5-9835-419b-9e68-bee21b3c9560",
+    "createdAt": "2026-07-07T01:54:30.638Z"
+  },
+  {
+    "id": "37495514-9a4f-4384-845e-bfe689ee7b73",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução manual (link direto: https://www.hostgator.com.br/blog/tendencias-ecommerce-2021/) concluída: Auditoria reprovou após todas as tentativas — salvo como rascunho para revisão de emergência. — post a78252bd-3ba0-4c88-ad04-deb2ad5ed189",
+    "createdAt": "2026-07-07T01:49:21.946Z"
+  },
+  {
+    "id": "9e51eac8-7185-4513-9318-2d32bdabb3e7",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução manual (link direto: https://www.hostgator.com.br/blog/tendencias-ecommerce-2021/) concluída: Auditoria reprovou após todas as tentativas — salvo como rascunho para revisão de emergência. — post 90db2431-dc1e-47a1-ad72-423f4937a06a",
+    "createdAt": "2026-07-07T01:41:35.392Z"
+  },
+  {
+    "id": "069ecc93-326a-4d82-894e-1c82ed70e483",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução agendada (RSS) concluída: Auditoria reprovou após todas as tentativas — salvo como rascunho para revisão de emergência. — post fd82f6ae-18cf-4dc4-8898-451fb9d0cb7a",
+    "createdAt": "2026-07-06T20:00:50.057Z"
+  },
+  {
+    "id": "46ed72cc-5e5c-42af-9254-c49bad9ec70a",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução manual (link direto: https://www.hostgator.com.br/blog/tendencias-ecommerce-2021/?gad_source=1&gad_campaignid=22134387764&gbraid=0AAAAAD5rgDbofqnoYqa0zNkgP76DQxmQV&gclid=Cj0KCQjw9ZLSBhCcARIsAEhGKgMbbIdillhX_171qa8UOsLC9y8potQg_y0UJjhIkXiSbUFh_QEdC_0aAjqqEALw_wcB) concluída: Rascunho salvo com sucesso — aguardando aprovação humana. — post 0fe0c393-8249-4a29-a2c8-468955c7ff50",
+    "createdAt": "2026-07-06T19:22:35.269Z"
+  },
+  {
+    "id": "77cc30be-8622-4f10-bd47-6e6f73d0bd33",
+    "action": "execução",
+    "module": "agente",
+    "description": "Execução agendada (RSS) concluída: Publicado automaticamente com sucesso! — post c875a805-f2f9-4c02-a85a-e4c098f9c639",
+    "createdAt": "2026-07-03T13:06:05.041Z"
+  },
+  {
+    "id": "db8fcdac-7688-44f4-b129-36066c875bc6",
+    "action": "captacao",
+    "module": "leads",
+    "description": "Novo lead captado: queromamar@gmail.com.",
+    "createdAt": "2026-07-02T18:51:42.006Z"
+  },
+  {
+    "id": "aeebcb78-85e0-4cd5-a66d-3d5085e84827",
+    "action": "erro",
+    "module": "agente",
+    "description": "Execução agendada (RSS) falhou: RSSFetcher: nenhuma fonte RSS retornou itens validos.",
+    "createdAt": "2026-07-01T20:49:17.768Z"
+  },
+  {
+    "id": "4899950e-b34e-4559-b2e3-9d5d95c9bf19",
+    "action": "erro",
+    "module": "agente",
+    "description": "Execução agendada (RSS) falhou: RSSFetcher: nenhuma fonte RSS retornou itens validos.",
+    "createdAt": "2026-07-01T20:40:57.443Z"
+  },
+  {
+    "id": "491edf78-9ad5-4df2-957c-572fac91ebb4",
+    "action": "captacao",
+    "module": "leads",
+    "description": "Novo lead captado: contato@pornhub.com.",
+    "createdAt": "2026-06-30T20:45:16.343Z"
+  },
+  {
+    "id": "40f59968-4017-4fe3-b3e0-eeb7f6f62f4b",
+    "action": "edição",
+    "module": "identidade visual",
+    "description": "Identidade visual e arquivos de marca atualizados.",
+    "createdAt": "2026-06-28T20:12:48.580Z"
+  },
+  {
+    "id": "8b606a34-3721-4fbc-9f7c-701b05c5d13a",
+    "action": "upload",
+    "module": "mídia",
+    "description": "Imagem \u001c1782677565789-c5b979ae.png\u001d enviada para a biblioteca.",
+    "createdAt": "2026-06-28T20:12:45.791Z"
+  },
+  {
+    "id": "7ef41527-c9e6-40e4-bb94-1834b6f66ee6",
+    "action": "edição",
+    "module": "identidade visual",
+    "description": "Identidade visual e arquivos de marca atualizados.",
+    "createdAt": "2026-06-28T20:11:49.918Z"
+  },
+  {
+    "id": "57f32302-0d60-436d-bc74-3a89b31d8eef",
+    "action": "upload",
+    "module": "mídia",
+    "description": "Imagem \u001c1782677505793-e848e3f9.png\u001d enviada para a biblioteca.",
+    "createdAt": "2026-06-28T20:11:45.798Z"
+  }
+]

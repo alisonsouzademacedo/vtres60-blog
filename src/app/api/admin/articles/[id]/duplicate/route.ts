@@ -1,0 +1,2 @@
+import { NextResponse } from "next/server";import { requireAdmin } from "@/lib/admin-api";import { apiError } from "@/lib/editorial-api";import { editorialRepository } from "@/services/editorial";
+export async function POST(_:Request,{params}:{params:Promise<{id:string}>}){const denied=await requireAdmin();if(denied)return denied;const{id}=await params;const item=await editorialRepository.duplicateEducationalArticle(id);return item?NextResponse.json(item,{status:201}):apiError(new Error("Artigo não encontrado."),404)}

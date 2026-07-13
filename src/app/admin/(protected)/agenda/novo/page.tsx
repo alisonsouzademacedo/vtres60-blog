@@ -1,0 +1,2 @@
+import { AdminPageHeading } from "@/components/admin/page-heading";import { OperationsEditor } from "@/components/admin/operations-editor";import { operationsRepository } from "@/services/operations";
+export default async function Page(){const events=await operationsRepository.listEvents();return <><AdminPageHeading eyebrow="Agenda" title="Novo evento" description="Publique um encontro industrial com todas as informações úteis para o leitor."/><OperationsEditor kind="event" events={events}/></>}

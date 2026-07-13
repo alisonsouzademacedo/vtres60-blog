@@ -1,0 +1,2 @@
+import { AdminPageHeading } from "@/components/admin/page-heading";import { LogList } from "@/components/admin/log-list";import { operationsRepository } from "@/services/operations";
+export default async function Page(){const items=await operationsRepository.listLogs();return <><AdminPageHeading eyebrow="Sistema" title="Logs de atividade" description="Trilha das ações relevantes realizadas no conteúdo, configurações e captação."/><LogList items={items}/></>}

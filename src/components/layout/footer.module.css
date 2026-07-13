@@ -1,0 +1,8 @@
+.footer { padding: 64px 0 24px; border-top: 1px solid var(--line); background: #080b11; }
+.grid { display: grid; grid-template-columns: 1.7fr repeat(3,1fr); gap: 48px; }
+.brand { display: block; font-size: 22px; font-weight: 900; letter-spacing: -.05em; margin-bottom: 18px; }.brand span { color: var(--blue); }.brand small { margin-left: 8px; font-size: 9px; letter-spacing: .18em; color: #a8b6c9; }
+.grid p { max-width: 330px; color: var(--muted); line-height: 1.65; font-size: 13px; }
+.grid b { display: block; margin-bottom: 17px; font-size: 12px; text-transform: uppercase; letter-spacing: .09em; }
+.grid > div:not(:first-child) a { display: block; color: var(--muted); margin: 11px 0; font-size: 13px; }.grid a:hover { color: white; }
+.bottom { display: flex; justify-content: space-between; gap: 20px; margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); color: #687487; font-size: 11px; }
+@media (max-width:800px){.grid{grid-template-columns:1fr 1fr;}.bottom{flex-direction:column}}@media(max-width:520px){.grid{grid-template-columns:1fr;gap:28px}}

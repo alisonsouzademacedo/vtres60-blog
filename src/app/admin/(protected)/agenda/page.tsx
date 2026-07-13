@@ -1,0 +1,4 @@
+import { AdminPageHeading } from "@/components/admin/page-heading";
+import { CrudList } from "@/components/admin/crud-list";
+import { operationsRepository } from "@/services/operations";
+export default async function Page(){const events=await operationsRepository.listEvents();return <><AdminPageHeading eyebrow="Portal" title="Agenda Industrial" description="Gerencie feiras, congressos e encontros, incluindo páginas completas e relacionamentos editoriais."/><CrudList initial={events.sort((a,b)=>a.displayOrder-b.displayOrder).map(item=>({id:item.id,title:item.name,slug:item.slug,status:item.status==="active"?"published":"draft",meta:`${item.city}, ${item.state} · ${item.startDate||"Sem data"}`}))} basePath="/admin/agenda" apiPath="/api/admin/events" createLabel="Novo evento" entityName="Evento"/></>}

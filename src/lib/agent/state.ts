@@ -1,0 +1,156 @@
+import { Annotation } from "@langchain/langgraph";
+import type { ImageProcessingResult } from "./image-pipeline/types";
+
+/**
+ * Estado compartilhado do grafo do Agente Autonomo.
+ *
+ * Alem dos campos pedidos na spec (sourceUrl, draftText, finalPost,
+ * imageKeyword, imageUrl, currentStep), foram adicionados campos de
+ * suporte que o pipeline precisa para funcionar de forma segura:
+ * - sourceText: texto original extraido pelo ContentExtractor. Sem isso
+ *   o InternalAuditor nao tem contra quem comparar o draftText.
+ * - auditApproved / auditFeedback / draftAttempts: sustentam o loop
+ *   Drafter <-> InternalAuditor com um teto de tentativas (evita loop
+ *   infinito se o texto nunca passar na auditoria).
+ * - publishedPostId: id do post criado pelo Publisher, util para o
+ *   endpoint de trigger retornar algo acionavel ao final do stream.
+ * - autoPublish: quem inicia a execucao decide isso, nao o Publisher.
+ *   true (rota /api/agent/cron, execucao autonoma agendada) publica direto
+ *   quando a auditoria aprova. false/ausente (rota /api/agent/trigger e o
+ *   fluxo manual do admin, onde ha um humano acompanhando o SSE em tempo
+ *   real) mantem o post como rascunho para revisao humana antes de ir ao
+ *   ar, mesmo com auditoria aprovada. Ver publisher.ts.
+ */
+export const AgentStateAnnotation = Annotation.Root({
+  sourceUrl: Annotation<string | undefined>({
+    reducer: (_current, next) => next,
+    default: () => undefined,
+  }),
+  sourceText: Annotation<string>({
+    reducer: (_current, next) => next,
+    default: () => "",
+  }),
+  draftText: Annotation<string>({
+    reducer: (_current, next) => next,
+    default: () => "",
+  }),
+  finalPost: Annotation<
+    | { titulo: string; conteudo: string; excerpt: string; impact: string; categoryId: string; tagIds: string[]; companies: string[] }
+    | undefined
+  >({
+    reducer: (_current, next) => next,
+    default: () => undefined,
+  }),
+  imageKeyword: Annotation<string>({
+    reducer: (_current, next) => next,
+    default: () => "",
+  }),
+  // Fase 4 — resultado estruturado do ImageProcessor. Substitui o antigo
+  // `imageUrl: string` (que guardava o hotlink externo direto): agora o
+  // mesmo dado (URL final) so existe dentro deste objeto, como
+  // finalImageUrl, evitando duplicar o mesmo valor em dois nomes de campo.
+  // `undefined` = ImageProcessor ainda nao rodou; `{status:"failed"}` =
+  // nenhum tier aprovou uma imagem (ver workflow.ts, roteia para END).
+  imageResult: Annotation<ImageProcessingResult | undefined>({
+    reducer: (_current, next) => next,
+    default: () => undefined,
+  }),
+  // og:image extraido do artigo original pelo ContentExtractor — candidato
+  // preferencial de imagem principal no ImageProcessor. Tipado como
+  // string | undefined (nao string com default ""), igual sourceUrl:
+  // e um valor que pode legitimamente nao existir e e checado em branch
+  // condicional ("se ogImage existir..."), nao um texto acumulado.
+  ogImage: Annotation<string | undefined>({
+    reducer: (_current, next) => next,
+    default: () => undefined,
+  }),
+  // Fase 4 — og:image:alt da pagina original, quando presente. Unico sinal
+  // textual real usado no QA de relevancia da source_og (ver
+  // image-pipeline/relevance.ts) — nao inventado quando ausente.
+  ogImageAlt: Annotation<string | undefined>({
+    reducer: (_current, next) => next,
+    default: () => undefined,
+  }),
+  // Dominio oficial da empresa foco da materia, identificado pelo Drafter
+  // (LLM). Pode nao existir (materia sem empresa especifica) — mesma
+  // logica de tipagem de ogImage acima.
+  companyDomain: Annotation<string | undefined>({
+    reducer: (_current, next) => next,
+    default: () => undefined,
+  }),
+  // URL do logo da empresa (Clearbit Logo API), resolvida pelo
+  // ImageProcessor a partir de companyDomain.
+  companyLogoUrl: Annotation<string | undefined>({
+    reducer: (_current, next) => next,
+    default: () => undefined,
+  }),
+  currentStep: Annotation<string>({
+    reducer: (_current, next) => next,
+    default: () => "Iniciando...",
+  }),
+  auditApproved: Annotation<boolean>({
+    reducer: (_current, next) => next,
+    default: () => false,
+  }),
+  auditFeedback: Annotation<string | undefined>({
+    reducer: (_current, next) => next,
+    default: () => undefined,
+  }),
+  draftAttempts: Annotation<number>({
+    reducer: (_current, next) => next,
+    default: () => 0,
+  }),
+  publishedPostId: Annotation<string | undefined>({
+    reducer: (_current, next) => next,
+    default: () => undefined,
+  }),
+  autoPublish: Annotation<boolean>({
+    reducer: (_current, next) => next,
+    default: () => false,
+  }),
+  // Fase 3 — id da linha de agent_queue sendo consumida nesta execucao
+  // (setado pela rota /api/agent/cron ANTES de invocar o grafo, quando ha
+  // um item pendente). ExactDedupeGate exclui essa propria linha ao checar
+  // agent_queue contra duplicidade — sem isso, o registro que a rota acabou
+  // de marcar "processed" para ESTA execucao apareceria como uma
+  // duplicidade falsa-positiva de si mesma.
+  queueItemId: Annotation<string | undefined>({
+    reducer: (_current, next) => next,
+    default: () => undefined,
+  }),
+  // Resultado do ExactDedupeGate (URL normalizada ja existe em public.posts
+  // ou em agent_queue) e do SemanticDedupeGate (mesmo evento, sem/com fato
+  // novo). Ver nodes/exact-dedupe.ts e nodes/semantic-dedupe.ts.
+  dedupeStatus: Annotation<"unique" | "exact_duplicate" | "same_event_no_material_update" | "same_event_material_update" | undefined>({
+    reducer: (_current, next) => next,
+    default: () => undefined,
+  }),
+  exactDuplicatePostId: Annotation<string | undefined>({
+    reducer: (_current, next) => next,
+    default: () => undefined,
+  }),
+  materialUpdateReason: Annotation<string | undefined>({
+    reducer: (_current, next) => next,
+    default: () => undefined,
+  }),
+  relatedPostId: Annotation<string | undefined>({
+    reducer: (_current, next) => next,
+    default: () => undefined,
+  }),
+  // Resultado do NewsworthinessGate — ver nodes/newsworthiness.ts.
+  isNewsworthy: Annotation<boolean>({
+    reducer: (_current, next) => next,
+    default: () => false,
+  }),
+  newsworthinessReason: Annotation<string | undefined>({
+    reducer: (_current, next) => next,
+    default: () => undefined,
+  }),
+  eventDateOrPeriod: Annotation<string | undefined>({
+    reducer: (_current, next) => next,
+    default: () => undefined,
+  }),
+});
+
+export type AgentState = typeof AgentStateAnnotation.State;
+export type AgentStateUpdate = typeof AgentStateAnnotation.Update;

@@ -1,0 +1,1 @@
+import { AdminPageHeading } from "@/components/admin/page-heading";import { TaxonomyEditor } from "@/components/admin/taxonomy-editor";export default function Page(){return <><AdminPageHeading eyebrow="Taxonomia" title="Nova categoria" description="Crie uma categoria editorial com navegação e SEO próprios."/><TaxonomyEditor kind="category"/></>}

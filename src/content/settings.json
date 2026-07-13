@@ -1,0 +1,142 @@
+{
+  "portalName": "VTRES60 Indústria",
+  "subtitle": "Notícias para quem move a indústria",
+  "slogan": "Conteúdo para decisões industriais.",
+  "institutionalDescription": "Curadoria, contexto e inteligência para quem decide os rumos da indústria brasileira.",
+  "primaryUrl": "https://www.vtres60.com.br/blog",
+  "contactEmail": "portal@vtres60.com.br",
+  "phone": "+55 11 0000-0000",
+  "socialLinks": [
+    {
+      "network": "LinkedIn",
+      "label": "LinkedIn",
+      "url": "https://www.linkedin.com/company/vtres60"
+    },
+    {
+      "network": "Instagram",
+      "label": "Instagram",
+      "url": "https://www.instagram.com/vtres60"
+    }
+  ],
+  "footerText": "© 2026 VTRES60. Conteúdo para decisões industriais.",
+  "footerNote": "Brasil · Atualizado diariamente",
+  "menuLinks": [
+    {
+      "label": "Últimas Notícias",
+      "url": "/noticias"
+    },
+    {
+      "label": "Marketing Industrial",
+      "url": "/categorias/marketing-industrial"
+    },
+    {
+      "label": "Vendas B2B",
+      "url": "/categorias/vendas-b2b"
+    },
+    {
+      "label": "CRM",
+      "url": "/categorias/crm"
+    },
+    {
+      "label": "SEO Industrial",
+      "url": "/categorias/seo-industrial"
+    },
+    {
+      "label": "Automação",
+      "url": "/categorias/automacao"
+    },
+    {
+      "label": "IA",
+      "url": "/categorias/ia"
+    },
+    {
+      "label": "ERP",
+      "url": "/categorias/erp"
+    },
+    {
+      "label": "Exportação",
+      "url": "/categorias/exportacao"
+    },
+    {
+      "label": "Logística",
+      "url": "/categorias/logistica"
+    },
+    {
+      "label": "RH Industrial",
+      "url": "/categorias/rh-industrial"
+    },
+    {
+      "label": "Indústria 4.0",
+      "url": "/categorias/industria-4-0"
+    }
+  ],
+  "footerColumns": [
+    {
+      "title": "Conteúdo",
+      "links": [
+        {
+          "label": "Últimas notícias",
+          "url": "/noticias"
+        },
+        {
+          "label": "Mercado",
+          "url": "/categorias/mercado"
+        },
+        {
+          "label": "Tecnologia",
+          "url": "/categorias/tecnologia"
+        },
+        {
+          "label": "Segmentos",
+          "url": "/segmentos"
+        }
+      ]
+    },
+    {
+      "title": "Institucional",
+      "links": [
+        {
+          "label": "Sobre o portal",
+          "url": "/sobre"
+        },
+        {
+          "label": "Expediente",
+          "url": "/expediente"
+        },
+        {
+          "label": "Política editorial",
+          "url": "/politica-editorial"
+        },
+        {
+          "label": "Privacidade",
+          "url": "/privacidade"
+        }
+      ]
+    },
+    {
+      "title": "Para sua empresa",
+      "links": [
+        {
+          "label": "Newsletter",
+          "url": "/#newsletter"
+        },
+        {
+          "label": "Empresas acompanhadas",
+          "url": "/empresas"
+        },
+        {
+          "label": "Agenda industrial",
+          "url": "/agenda"
+        },
+        {
+          "label": "Fale com a redação",
+          "url": "mailto:portal@vtres60.com.br"
+        }
+      ]
+    }
+  ],
+  "headerButton": {
+    "label": "Assine grátis",
+    "url": "/#newsletter"
+  }
+}

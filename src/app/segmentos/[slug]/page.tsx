@@ -1,0 +1,6 @@
+import type { Metadata } from "next";
+import { TaxonomyPage } from "@/components/editorial/taxonomy-page";
+import { contentRepository } from "@/services/cms";
+import { slugify } from "@/lib/content";
+export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{const{slug}=await params;const profile=(await contentRepository.listSegmentProfiles()).find(item=>item.slug===slug);if(!profile)return{};const title=profile.metaTitle||`${profile.name}: notícias e inteligência industrial`,description=profile.metaDescription||profile.description;return{title,description,alternates:{canonical:`/segmentos/${profile.slug}`},openGraph:{title,description,images:[profile.image]},twitter:{card:"summary_large_image",title,description,images:[profile.image]}}}
+export default async function Page({params}:{params:Promise<{slug:string}>}){const{slug}=await params;const profile=(await contentRepository.listSegmentProfiles()).find(item=>item.slug===slug);const title=profile?.name??slug.split("-").map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(" ");const description=profile?.description||`Movimentos de mercado, tecnologia e gestão com impacto direto no setor de ${title.toLowerCase()}.`;return <TaxonomyPage eyebrow="Segmento industrial" title={title} description={description} filter={a=>a.segments.some(s=>slugify(s)===slug)}/>}

@@ -1,0 +1,1 @@
+import { AdminPageHeading } from "@/components/admin/page-heading";import { TaxonomyEditor } from "@/components/admin/taxonomy-editor";export default function Page(){return <><AdminPageHeading eyebrow="Taxonomia" title="Nova tag" description="Crie um assunto editorial com metadados próprios."/><TaxonomyEditor kind="tag"/></>}

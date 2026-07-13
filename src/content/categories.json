@@ -1,0 +1,331 @@
+[
+  {
+    "id": "cat-marketing-industrial",
+    "name": "Marketing Industrial",
+    "slug": "marketing-industrial",
+    "description": "Notícias, análises e conteúdos sobre marketing industrial para a indústria brasileira.",
+    "image": "",
+    "icon": "",
+    "color": "#3485ff",
+    "menuOrder": 1,
+    "showInMenu": true,
+    "showOnHome": true,
+    "metaTitle": "Marketing Industrial: Estratégias, Notícias e Guias",
+    "metaDescription": "Conteúdos sobre marketing indústria, marketing digital industrial, SEO, posicionamento e geração de demanda B2B.",
+    "keywords": [
+      "marketing indústria",
+      "marketing para indústria",
+      "marketing digital industrial"
+    ],
+    "seoIntroduction": "Estratégias, análises e notícias para transformar marketing na indústria em autoridade, geração de demanda e crescimento comercial.",
+    "relatedArticleIds": [],
+    "relatedPillarSlugs": [
+      "marketing-para-industria",
+      "marketing-para-industrias",
+      "marketing-digital-para-industria",
+      "marketing-digital-para-industrias",
+      "marketing-digital-industrial",
+      "marketing-na-industria",
+      "marketing-na-industria-de-alimentos",
+      "marketing-na-industria-farmaceutica"
+    ],
+    "page": {
+      "h1": "Marketing Industrial",
+      "introduction": "Estratégias, análises e notícias para transformar marketing na indústria em autoridade, geração de demanda e crescimento comercial. Este hub conecta marketing para indústria, marketing digital industrial, SEO, CRM, posicionamento e vendas B2B.",
+      "seoDescription": "Conteúdos sobre marketing indústria, marketing digital industrial, SEO, posicionamento e geração de demanda B2B.",
+      "newsSlugs": [
+        "conteudo-tecnico-gera-demanda-b2b-industria",
+        "marketing-digital-industrial-fabricas-medio-porte",
+        "seo-industrial-canal-estrategico-empresas-b2b"
+      ],
+      "educationalArticleSlugs": [],
+      "pillarSlugs": [
+        "marketing-para-industria",
+        "marketing-para-industrias",
+        "marketing-digital-para-industria",
+        "marketing-digital-para-industrias",
+        "marketing-digital-industrial",
+        "marketing-na-industria",
+        "marketing-na-industria-de-alimentos",
+        "marketing-na-industria-farmaceutica"
+      ],
+      "cta": {
+        "label": "Falar com um especialista",
+        "url": "mailto:especialista@vtres60.com.br",
+        "text": "Transforme informação em uma próxima decisão clara."
+      },
+      "faq": [
+        {
+          "question": "O que é marketing industrial?",
+          "answer": "É a aplicação de posicionamento, conteúdo, canais e inteligência comercial ao processo de compra B2B da indústria."
+        }
+      ]
+    },
+    "createdAt": "2026-06-28T12:50:04.291Z",
+    "updatedAt": "2026-06-28T12:50:04.291Z"
+  },
+  {
+    "id": "cat-vendas-b2b",
+    "name": "Vendas B2B",
+    "slug": "vendas-b2b",
+    "description": "Notícias, análises e conteúdos sobre vendas b2b para a indústria brasileira.",
+    "image": "",
+    "icon": "",
+    "color": "#6f7f96",
+    "menuOrder": 2,
+    "showInMenu": true,
+    "showOnHome": false,
+    "metaTitle": "Vendas B2B para a indústria",
+    "metaDescription": "Acompanhe notícias e análises sobre vendas b2b na indústria.",
+    "keywords": [
+      "vendas b2b"
+    ],
+    "seoIntroduction": "Cobertura especializada sobre vendas b2b para líderes industriais.",
+    "relatedArticleIds": [],
+    "relatedPillarSlugs": [],
+    "createdAt": "2026-06-28T12:50:04.291Z",
+    "updatedAt": "2026-06-28T12:50:04.291Z"
+  },
+  {
+    "id": "cat-crm",
+    "name": "CRM",
+    "slug": "crm",
+    "description": "Notícias, análises e conteúdos sobre crm para a indústria brasileira.",
+    "image": "",
+    "icon": "",
+    "color": "#6f7f96",
+    "menuOrder": 3,
+    "showInMenu": true,
+    "showOnHome": false,
+    "metaTitle": "CRM para a indústria",
+    "metaDescription": "Acompanhe notícias e análises sobre crm na indústria.",
+    "keywords": [
+      "crm"
+    ],
+    "seoIntroduction": "Cobertura especializada sobre crm para líderes industriais.",
+    "relatedArticleIds": [],
+    "relatedPillarSlugs": [],
+    "createdAt": "2026-06-28T12:50:04.291Z",
+    "updatedAt": "2026-06-28T12:50:04.291Z"
+  },
+  {
+    "id": "cat-seo-industrial",
+    "name": "SEO Industrial",
+    "slug": "seo-industrial",
+    "description": "Notícias, análises e conteúdos sobre seo industrial para a indústria brasileira.",
+    "image": "",
+    "icon": "",
+    "color": "#6f7f96",
+    "menuOrder": 4,
+    "showInMenu": true,
+    "showOnHome": false,
+    "metaTitle": "SEO Industrial para a indústria",
+    "metaDescription": "Acompanhe notícias e análises sobre seo industrial na indústria.",
+    "keywords": [
+      "seo industrial"
+    ],
+    "seoIntroduction": "Cobertura especializada sobre seo industrial para líderes industriais.",
+    "relatedArticleIds": [],
+    "relatedPillarSlugs": [],
+    "createdAt": "2026-06-28T12:50:04.291Z",
+    "updatedAt": "2026-06-28T12:50:04.291Z"
+  },
+  {
+    "id": "cat-automacao",
+    "name": "Automação",
+    "slug": "automacao",
+    "description": "Notícias, análises e conteúdos sobre automação para a indústria brasileira.",
+    "image": "",
+    "icon": "",
+    "color": "#6f7f96",
+    "menuOrder": 5,
+    "showInMenu": true,
+    "showOnHome": false,
+    "metaTitle": "Automação para a indústria",
+    "metaDescription": "Acompanhe notícias e análises sobre automação na indústria.",
+    "keywords": [
+      "automação"
+    ],
+    "seoIntroduction": "Cobertura especializada sobre automação para líderes industriais.",
+    "relatedArticleIds": [],
+    "relatedPillarSlugs": [],
+    "createdAt": "2026-06-28T12:50:04.291Z",
+    "updatedAt": "2026-06-28T12:50:04.291Z"
+  },
+  {
+    "id": "cat-ia",
+    "name": "IA",
+    "slug": "ia",
+    "description": "Notícias, análises e conteúdos sobre ia para a indústria brasileira.",
+    "image": "",
+    "icon": "",
+    "color": "#6f7f96",
+    "menuOrder": 6,
+    "showInMenu": true,
+    "showOnHome": false,
+    "metaTitle": "IA para a indústria",
+    "metaDescription": "Acompanhe notícias e análises sobre ia na indústria.",
+    "keywords": [
+      "ia"
+    ],
+    "seoIntroduction": "Cobertura especializada sobre ia para líderes industriais.",
+    "relatedArticleIds": [],
+    "relatedPillarSlugs": [],
+    "createdAt": "2026-06-28T12:50:04.291Z",
+    "updatedAt": "2026-06-28T12:50:04.291Z"
+  },
+  {
+    "id": "cat-erp",
+    "name": "ERP",
+    "slug": "erp",
+    "description": "Notícias, análises e conteúdos sobre erp para a indústria brasileira.",
+    "image": "",
+    "icon": "",
+    "color": "#6f7f96",
+    "menuOrder": 7,
+    "showInMenu": true,
+    "showOnHome": false,
+    "metaTitle": "ERP para a indústria",
+    "metaDescription": "Acompanhe notícias e análises sobre erp na indústria.",
+    "keywords": [
+      "erp"
+    ],
+    "seoIntroduction": "Cobertura especializada sobre erp para líderes industriais.",
+    "relatedArticleIds": [],
+    "relatedPillarSlugs": [],
+    "createdAt": "2026-06-28T12:50:04.291Z",
+    "updatedAt": "2026-06-28T12:50:04.291Z"
+  },
+  {
+    "id": "cat-exportacao",
+    "name": "Exportação",
+    "slug": "exportacao",
+    "description": "Notícias, análises e conteúdos sobre exportação para a indústria brasileira.",
+    "image": "",
+    "icon": "",
+    "color": "#6f7f96",
+    "menuOrder": 8,
+    "showInMenu": true,
+    "showOnHome": false,
+    "metaTitle": "Exportação para a indústria",
+    "metaDescription": "Acompanhe notícias e análises sobre exportação na indústria.",
+    "keywords": [
+      "exportação"
+    ],
+    "seoIntroduction": "Cobertura especializada sobre exportação para líderes industriais.",
+    "relatedArticleIds": [],
+    "relatedPillarSlugs": [],
+    "createdAt": "2026-06-28T12:50:04.291Z",
+    "updatedAt": "2026-06-28T12:50:04.291Z"
+  },
+  {
+    "id": "cat-logistica",
+    "name": "Logística",
+    "slug": "logistica",
+    "description": "Notícias, análises e conteúdos sobre logística para a indústria brasileira.",
+    "image": "",
+    "icon": "",
+    "color": "#6f7f96",
+    "menuOrder": 9,
+    "showInMenu": true,
+    "showOnHome": false,
+    "metaTitle": "Logística para a indústria",
+    "metaDescription": "Acompanhe notícias e análises sobre logística na indústria.",
+    "keywords": [
+      "logística"
+    ],
+    "seoIntroduction": "Cobertura especializada sobre logística para líderes industriais.",
+    "relatedArticleIds": [],
+    "relatedPillarSlugs": [],
+    "createdAt": "2026-06-28T12:50:04.291Z",
+    "updatedAt": "2026-06-28T12:50:04.291Z"
+  },
+  {
+    "id": "cat-rh-industrial",
+    "name": "RH Industrial",
+    "slug": "rh-industrial",
+    "description": "Notícias, análises e conteúdos sobre rh industrial para a indústria brasileira.",
+    "image": "",
+    "icon": "",
+    "color": "#6f7f96",
+    "menuOrder": 10,
+    "showInMenu": true,
+    "showOnHome": false,
+    "metaTitle": "RH Industrial para a indústria",
+    "metaDescription": "Acompanhe notícias e análises sobre rh industrial na indústria.",
+    "keywords": [
+      "rh industrial"
+    ],
+    "seoIntroduction": "Cobertura especializada sobre rh industrial para líderes industriais.",
+    "relatedArticleIds": [],
+    "relatedPillarSlugs": [],
+    "createdAt": "2026-06-28T12:50:04.291Z",
+    "updatedAt": "2026-06-28T12:50:04.291Z"
+  },
+  {
+    "id": "cat-industria-4-0",
+    "name": "Indústria 4.0",
+    "slug": "industria-4-0",
+    "description": "Notícias, análises e conteúdos sobre indústria 4.0 para a indústria brasileira.",
+    "image": "",
+    "icon": "",
+    "color": "#6f7f96",
+    "menuOrder": 11,
+    "showInMenu": true,
+    "showOnHome": false,
+    "metaTitle": "Indústria 4.0 para a indústria",
+    "metaDescription": "Acompanhe notícias e análises sobre indústria 4.0 na indústria.",
+    "keywords": [
+      "indústria 4.0"
+    ],
+    "seoIntroduction": "Cobertura especializada sobre indústria 4.0 para líderes industriais.",
+    "relatedArticleIds": [],
+    "relatedPillarSlugs": [],
+    "createdAt": "2026-06-28T12:50:04.291Z",
+    "updatedAt": "2026-06-28T12:50:04.291Z"
+  },
+  {
+    "id": "cat-mercado",
+    "name": "Mercado",
+    "slug": "mercado",
+    "description": "Notícias, análises e conteúdos sobre mercado para a indústria brasileira.",
+    "image": "",
+    "icon": "",
+    "color": "#6f7f96",
+    "menuOrder": 100,
+    "showInMenu": false,
+    "showOnHome": false,
+    "metaTitle": "Mercado para a indústria",
+    "metaDescription": "Acompanhe notícias e análises sobre mercado na indústria.",
+    "keywords": [
+      "mercado"
+    ],
+    "seoIntroduction": "Cobertura especializada sobre mercado para líderes industriais.",
+    "relatedArticleIds": [],
+    "relatedPillarSlugs": [],
+    "createdAt": "2026-06-28T12:54:13.120Z",
+    "updatedAt": "2026-06-28T12:54:13.120Z"
+  },
+  {
+    "id": "cat-inteligencia-artificial",
+    "name": "Inteligência Artificial",
+    "slug": "inteligencia-artificial",
+    "description": "Notícias, análises e conteúdos sobre inteligência artificial para a indústria brasileira.",
+    "image": "",
+    "icon": "",
+    "color": "#6f7f96",
+    "menuOrder": 101,
+    "showInMenu": false,
+    "showOnHome": false,
+    "metaTitle": "Inteligência Artificial para a indústria",
+    "metaDescription": "Acompanhe notícias e análises sobre inteligência artificial na indústria.",
+    "keywords": [
+      "inteligência artificial"
+    ],
+    "seoIntroduction": "Cobertura especializada sobre inteligência artificial para líderes industriais.",
+    "relatedArticleIds": [],
+    "relatedPillarSlugs": [],
+    "createdAt": "2026-06-28T12:54:13.120Z",
+    "updatedAt": "2026-06-28T12:54:13.120Z"
+  }
+]

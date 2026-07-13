@@ -1,0 +1,41 @@
+import type { Article } from "@/types/content";
+
+export interface PillarSection { id: string; title: string; paragraphs: string[] }
+export interface PillarFaq { question: string; answer: string }
+export interface PillarPage {
+  slug: string; title: string; metaTitle: string; metaDescription: string; keyword: string;
+  introduction: string; audience: string; sections: PillarSection[]; faq: PillarFaq[];
+}
+
+const createPillar = (config: Pick<PillarPage,"slug"|"title"|"metaTitle"|"metaDescription"|"keyword"|"introduction"|"audience">): PillarPage => ({
+  ...config,
+  sections: [
+    { id:"fundamentos", title:`Como estruturar ${config.keyword}`, paragraphs:[`Uma estratégia de ${config.keyword} começa pelo entendimento do mercado, do processo de compra e das aplicações técnicas que geram valor para o cliente. Na indústria, posicionamento e geração de demanda precisam refletir ciclos comerciais longos e múltiplos decisores.`,`O trabalho combina inteligência de mercado, conteúdo técnico, presença digital e integração com vendas. O objetivo não é produzir comunicação em volume, mas criar relevância em cada etapa da decisão.`] },
+    { id:"estrategia", title:"Estratégia, canais e geração de demanda", paragraphs:[`A escolha de canais deve partir do perfil das contas e das oportunidades prioritárias. SEO industrial, mídia, CRM e automação comercial funcionam melhor quando compartilham critérios de segmentação e uma mesma leitura de jornada.`,`Indicadores de qualidade — oportunidades qualificadas, avanço de pipeline e influência sobre receita — ajudam a conectar investimento em marketing às decisões do negócio.`] },
+    { id:"execucao", title:"Como transformar planejamento em crescimento", paragraphs:[`A execução ganha consistência com uma agenda editorial baseada em dúvidas reais, páginas que respondem a intenções de busca e processos claros de passagem entre marketing e vendas.`,`Para ${config.audience}, a vantagem aparece quando conhecimento técnico vira autoridade, descoberta orgânica e conversas comerciais mais maduras.`] },
+  ],
+  faq: [
+    { question:`O que é ${config.keyword}?`, answer:`É a aplicação de estratégia, posicionamento, conteúdo, canais digitais e inteligência comercial ao contexto específico de empresas industriais e de seus compradores B2B.` },
+    { question:`Como começar um projeto de ${config.keyword}?`, answer:"Comece pelo diagnóstico de mercado, definição das contas prioritárias, mapeamento da jornada de compra e construção de uma base de conteúdo alinhada às oportunidades comerciais." },
+    { question:"Como medir resultados em marketing industrial?", answer:"Combine métricas de descoberta e engajamento com indicadores de negócio, como oportunidades qualificadas, avanço no pipeline, custo de aquisição e receita influenciada." },
+  ],
+});
+
+export const marketingPillars: PillarPage[] = [
+  createPillar({slug:"marketing-para-industria",title:"Marketing para Indústria",metaTitle:"Marketing para Indústria: Estratégias e Guia Completo",metaDescription:"Entenda como estruturar marketing para indústria com posicionamento, SEO, conteúdo e geração de demanda B2B.",keyword:"marketing para indústria",introduction:"Marketing para indústria exige uma leitura própria de mercado, produto e jornada de compra. Este guia reúne os fundamentos para construir autoridade, gerar demanda qualificada e aproximar marketing das metas comerciais.",audience:"fabricantes e empresas B2B"}),
+  createPillar({slug:"marketing-para-industrias",title:"Marketing para Indústrias",metaTitle:"Marketing para Indústrias: Como Gerar Demanda B2B",metaDescription:"Guia de marketing para indústrias com estratégia digital, conteúdo técnico, posicionamento e integração comercial.",keyword:"marketing para indústrias",introduction:"Estratégias de marketing para indústrias precisam respeitar diferenças de segmento, complexidade técnica e maturidade comercial. A arquitetura certa conecta presença digital, reputação e oportunidades reais de negócio.",audience:"indústrias de diferentes portes e segmentos"}),
+  createPillar({slug:"marketing-digital-para-industria",title:"Marketing Digital para Indústria",metaTitle:"Marketing Digital para Indústria: Guia Estratégico",metaDescription:"Aprenda marketing digital para indústria com SEO industrial, mídia, conteúdo técnico, CRM e conversão B2B.",keyword:"marketing digital para indústria",introduction:"Marketing digital para indústria transforma conhecimento técnico em descoberta, confiança e demanda. O desafio é coordenar canais digitais com o processo comercial e com as prioridades reais do mercado.",audience:"equipes industriais de marketing e vendas"}),
+  createPillar({slug:"marketing-digital-para-industrias",title:"Marketing Digital para Indústrias",metaTitle:"Marketing Digital para Indústrias: Estratégias B2B",metaDescription:"Estruture marketing digital para indústrias com posicionamento, SEO, automação, conteúdo e inteligência comercial.",keyword:"marketing digital para indústrias",introduction:"Marketing digital para indústrias não é uma coleção de campanhas isoladas. É um sistema de aquisição e autoridade que combina dados, conteúdo, distribuição e acompanhamento comercial.",audience:"empresas industriais que buscam escala"}),
+  createPillar({slug:"marketing-digital-industrial",title:"Marketing Digital Industrial",metaTitle:"Marketing Digital Industrial: Estratégia e Aplicação",metaDescription:"Veja como aplicar marketing digital industrial para ganhar autoridade, gerar demanda e fortalecer vendas B2B.",keyword:"marketing digital industrial",introduction:"Marketing digital industrial organiza a presença da empresa em torno de problemas, aplicações e oportunidades de mercado. Uma boa estratégia ajuda compradores a encontrar, avaliar e confiar na solução industrial.",audience:"negócios industriais B2B"}),
+  createPillar({slug:"marketing-na-industria",title:"Marketing na Indústria",metaTitle:"Marketing na Indústria: Papel, Estratégia e Resultados",metaDescription:"Descubra o papel do marketing na indústria e como integrar posicionamento, demanda, vendas e transformação digital.",keyword:"marketing na indústria",introduction:"O papel do marketing na indústria evoluiu: além de comunicação, ele organiza inteligência de mercado, posicionamento e geração de demanda. Essa atuação amplia a qualidade das decisões e a previsibilidade comercial.",audience:"lideranças e gestores industriais"}),
+  createPillar({slug:"marketing-na-industria-de-alimentos",title:"Marketing na Indústria de Alimentos",metaTitle:"Marketing na Indústria de Alimentos: Guia B2B",metaDescription:"Estratégias de marketing na indústria de alimentos para posicionamento, canais B2B, conteúdo e geração de demanda.",keyword:"marketing na indústria de alimentos",introduction:"Marketing na indústria de alimentos combina confiança, capacidade produtiva, conformidade e diferenciação. A comunicação precisa traduzir atributos técnicos em valor para distribuidores, varejistas e compradores profissionais.",audience:"fabricantes e fornecedores do setor de alimentos"}),
+  createPillar({slug:"marketing-na-industria-farmaceutica",title:"Marketing na Indústria Farmacêutica",metaTitle:"Marketing na Indústria Farmacêutica: Estratégia B2B",metaDescription:"Guia de marketing na indústria farmacêutica com autoridade, conteúdo técnico, compliance e geração de demanda.",keyword:"marketing na indústria farmacêutica",introduction:"Marketing na indústria farmacêutica exige precisão, credibilidade e atenção regulatória. A estratégia deve equilibrar conteúdo técnico, reputação, relacionamento e desenvolvimento de oportunidades B2B.",audience:"fabricantes e fornecedores do setor farmacêutico"}),
+];
+
+export const getPillarBySlug = (slug:string) => marketingPillars.find((pillar)=>pillar.slug===slug);
+export const getPillarsForArticle = (article:Article) => {
+  if(article.segments.includes("Alimentos")) return [marketingPillars[6],marketingPillars[2],marketingPillars[0]];
+  if(article.segments.includes("Químico") || article.tags.includes("Farmacêutico")) return [marketingPillars[7],marketingPillars[2],marketingPillars[0]];
+  if(article.tags.some((tag)=>["SEO","CRM","Vendas B2B","Marketing"].includes(tag))) return marketingPillars.slice(0,4);
+  return marketingPillars.slice(0,3);
+};

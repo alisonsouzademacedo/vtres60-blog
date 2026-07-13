@@ -1,0 +1,22 @@
+{
+  "logoPrimary": "/uploads/1782677565789-c5b979ae.png",
+  "logoDark": "",
+  "favicon": "/uploads/1782677505793-e848e3f9.png",
+  "compactMark": "/icon.svg",
+  "defaultShareImage": "/images/industrial/robotica-fabrica.png",
+  "colors": {
+    "primary": "#3485ff",
+    "secondary": "#8a6cff",
+    "accent": "#5dd6e8",
+    "lightBackground": "#f6f7f9",
+    "darkBackground": "#07090e",
+    "button": "#3485ff",
+    "link": "#3485ff"
+  },
+  "typography": {
+    "body": "Arial, Helvetica, sans-serif",
+    "headings": "Arial, Helvetica, sans-serif"
+  },
+  "cardRadius": 16,
+  "shadowIntensity": "soft"
+}

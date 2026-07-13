@@ -1,0 +1,2 @@
+import { AdminPageHeading } from "@/components/admin/page-heading";import { MediaLibrary } from "@/components/admin/media-library";import { operationsRepository } from "@/services/operations";
+export default async function Page(){const items=await operationsRepository.listMedia();return <><AdminPageHeading eyebrow="Operação" title="Biblioteca de Mídia" description="Envie, documente e reutilize imagens em notícias, artigos, eventos, segmentos e identidade visual."/><MediaLibrary initial={items}/></>}

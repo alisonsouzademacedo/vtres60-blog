@@ -1,0 +1,162 @@
+[
+  {
+    "id": "tag-automacao",
+    "name": "Automação",
+    "slug": "automacao",
+    "description": "Conteúdos relacionados a Automação na indústria.",
+    "metaTitle": "Automação na indústria | VTRES60",
+    "metaDescription": "Notícias, análises e guias sobre Automação para empresas industriais.",
+    "createdAt": "2026-06-28T12:50:04.293Z",
+    "updatedAt": "2026-06-28T12:50:04.293Z"
+  },
+  {
+    "id": "tag-ia",
+    "name": "IA",
+    "slug": "ia",
+    "description": "Conteúdos relacionados a IA na indústria.",
+    "metaTitle": "IA na indústria | VTRES60",
+    "metaDescription": "Notícias, análises e guias sobre IA para empresas industriais.",
+    "createdAt": "2026-06-28T12:50:04.293Z",
+    "updatedAt": "2026-06-28T12:50:04.293Z"
+  },
+  {
+    "id": "tag-produtividade",
+    "name": "Produtividade",
+    "slug": "produtividade",
+    "description": "Conteúdos relacionados a Produtividade na indústria.",
+    "metaTitle": "Produtividade na indústria | VTRES60",
+    "metaDescription": "Notícias, análises e guias sobre Produtividade para empresas industriais.",
+    "createdAt": "2026-06-28T12:50:04.293Z",
+    "updatedAt": "2026-06-28T12:50:04.293Z"
+  },
+  {
+    "id": "tag-aco",
+    "name": "Aço",
+    "slug": "aco",
+    "description": "Conteúdos relacionados a Aço na indústria.",
+    "metaTitle": "Aço na indústria | VTRES60",
+    "metaDescription": "Notícias, análises e guias sobre Aço para empresas industriais.",
+    "createdAt": "2026-06-28T12:50:04.293Z",
+    "updatedAt": "2026-06-28T12:50:04.293Z"
+  },
+  {
+    "id": "tag-infraestrutura",
+    "name": "Infraestrutura",
+    "slug": "infraestrutura",
+    "description": "Conteúdos relacionados a Infraestrutura na indústria.",
+    "metaTitle": "Infraestrutura na indústria | VTRES60",
+    "metaDescription": "Notícias, análises e guias sobre Infraestrutura para empresas industriais.",
+    "createdAt": "2026-06-28T12:50:04.293Z",
+    "updatedAt": "2026-06-28T12:50:04.293Z"
+  },
+  {
+    "id": "tag-logistica",
+    "name": "Logística",
+    "slug": "logistica",
+    "description": "Conteúdos relacionados a Logística na indústria.",
+    "metaTitle": "Logística na indústria | VTRES60",
+    "metaDescription": "Notícias, análises e guias sobre Logística para empresas industriais.",
+    "createdAt": "2026-06-28T12:50:04.293Z",
+    "updatedAt": "2026-06-28T12:50:04.293Z"
+  },
+  {
+    "id": "tag-dados",
+    "name": "Dados",
+    "slug": "dados",
+    "description": "Conteúdos relacionados a Dados na indústria.",
+    "metaTitle": "Dados na indústria | VTRES60",
+    "metaDescription": "Notícias, análises e guias sobre Dados para empresas industriais.",
+    "createdAt": "2026-06-28T12:50:04.293Z",
+    "updatedAt": "2026-06-28T12:50:04.293Z"
+  },
+  {
+    "id": "tag-erp",
+    "name": "ERP",
+    "slug": "erp",
+    "description": "Conteúdos relacionados a ERP na indústria.",
+    "metaTitle": "ERP na indústria | VTRES60",
+    "metaDescription": "Notícias, análises e guias sobre ERP para empresas industriais.",
+    "createdAt": "2026-06-28T12:50:04.293Z",
+    "updatedAt": "2026-06-28T12:50:04.293Z"
+  },
+  {
+    "id": "tag-vendas-b2b",
+    "name": "Vendas B2B",
+    "slug": "vendas-b2b",
+    "description": "Conteúdos relacionados a Vendas B2B na indústria.",
+    "metaTitle": "Vendas B2B na indústria | VTRES60",
+    "metaDescription": "Notícias, análises e guias sobre Vendas B2B para empresas industriais.",
+    "createdAt": "2026-06-28T12:50:04.293Z",
+    "updatedAt": "2026-06-28T12:50:04.293Z"
+  },
+  {
+    "id": "tag-crm",
+    "name": "CRM",
+    "slug": "crm",
+    "description": "Conteúdos relacionados a CRM na indústria.",
+    "metaTitle": "CRM na indústria | VTRES60",
+    "metaDescription": "Notícias, análises e guias sobre CRM para empresas industriais.",
+    "createdAt": "2026-06-28T12:50:04.293Z",
+    "updatedAt": "2026-06-28T12:50:04.293Z"
+  },
+  {
+    "id": "tag-exportacao",
+    "name": "Exportação",
+    "slug": "exportacao",
+    "description": "Conteúdos relacionados a Exportação na indústria.",
+    "metaTitle": "Exportação na indústria | VTRES60",
+    "metaDescription": "Notícias, análises e guias sobre Exportação para empresas industriais.",
+    "createdAt": "2026-06-28T12:50:04.293Z",
+    "updatedAt": "2026-06-28T12:50:04.293Z"
+  },
+  {
+    "id": "tag-maquinas",
+    "name": "Máquinas",
+    "slug": "maquinas",
+    "description": "Conteúdos relacionados a Máquinas na indústria.",
+    "metaTitle": "Máquinas na indústria | VTRES60",
+    "metaDescription": "Notícias, análises e guias sobre Máquinas para empresas industriais.",
+    "createdAt": "2026-06-28T12:50:04.293Z",
+    "updatedAt": "2026-06-28T12:50:04.293Z"
+  },
+  {
+    "id": "tag-marketing",
+    "name": "Marketing",
+    "slug": "marketing",
+    "description": "Conteúdos relacionados a Marketing na indústria.",
+    "metaTitle": "Marketing na indústria | VTRES60",
+    "metaDescription": "Notícias, análises e guias sobre Marketing para empresas industriais.",
+    "createdAt": "2026-06-28T12:50:04.293Z",
+    "updatedAt": "2026-06-28T12:50:04.293Z"
+  },
+  {
+    "id": "tag-conteudo",
+    "name": "Conteúdo",
+    "slug": "conteudo",
+    "description": "Conteúdos relacionados a Conteúdo na indústria.",
+    "metaTitle": "Conteúdo na indústria | VTRES60",
+    "metaDescription": "Notícias, análises e guias sobre Conteúdo para empresas industriais.",
+    "createdAt": "2026-06-28T12:50:04.293Z",
+    "updatedAt": "2026-06-28T12:50:04.293Z"
+  },
+  {
+    "id": "tag-transformacao-digital",
+    "name": "Transformação Digital",
+    "slug": "transformacao-digital",
+    "description": "Conteúdos relacionados a Transformação Digital na indústria.",
+    "metaTitle": "Transformação Digital na indústria | VTRES60",
+    "metaDescription": "Notícias, análises e guias sobre Transformação Digital para empresas industriais.",
+    "createdAt": "2026-06-28T12:50:04.293Z",
+    "updatedAt": "2026-06-28T12:50:04.293Z"
+  },
+  {
+    "id": "tag-seo",
+    "name": "SEO",
+    "slug": "seo",
+    "description": "Conteúdos relacionados a SEO na indústria.",
+    "metaTitle": "SEO na indústria | VTRES60",
+    "metaDescription": "Notícias, análises e guias sobre SEO para empresas industriais.",
+    "createdAt": "2026-06-28T12:50:04.293Z",
+    "updatedAt": "2026-06-28T12:50:04.293Z"
+  }
+]

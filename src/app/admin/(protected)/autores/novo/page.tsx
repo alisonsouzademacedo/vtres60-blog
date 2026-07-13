@@ -1,0 +1,1 @@
+import { AdminPageHeading } from "@/components/admin/page-heading";import { TaxonomyEditor } from "@/components/admin/taxonomy-editor";export default function Page(){return <><AdminPageHeading eyebrow="Equipe editorial" title="Novo autor" description="Cadastre um especialista para assinar notícias e artigos."/><TaxonomyEditor kind="author"/></>}

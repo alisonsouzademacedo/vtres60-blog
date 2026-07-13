@@ -1,0 +1,25 @@
+{
+  "defaultTitle": "VTRES60 Indústria — Notícias da indústria brasileira",
+  "defaultDescription": "Notícias e inteligência sobre indústria, marketing industrial, vendas B2B, SEO, CRM, automação e transformação digital.",
+  "defaultKeywords": [
+    "indústria brasileira",
+    "marketing industrial",
+    "vendas B2B",
+    "SEO industrial",
+    "automação industrial"
+  ],
+  "defaultOgImage": "/images/industrial/robotica-fabrica.png",
+  "canonicalBaseUrl": "https://www.vtres60.com.br/blog",
+  "robotsEnabled": true,
+  "sitemapEnabled": true,
+  "googleAnalyticsId": "",
+  "googleTagManagerId": "",
+  "metaPixelId": "",
+  "linkedinPartnerId": "",
+  "organization": {
+    "name": "VTRES60",
+    "description": "Estratégia, marketing e inteligência comercial para a indústria.",
+    "url": "https://vtres60.com.br",
+    "logo": "/icon.svg"
+  }
+}

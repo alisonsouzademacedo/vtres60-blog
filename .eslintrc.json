@@ -1,0 +1,17 @@
+{
+  "extends": ["next/core-web-vitals", "next/typescript"],
+  "ignorePatterns": ["next-env.d.ts", ".next/**"],
+  "overrides": [
+    {
+      "files": ["src/components/admin/leads-manager.tsx", "src/components/admin/backup-manager.tsx"],
+      "rules": { "@next/next/no-html-link-for-pages": "off" }
+    },
+    {
+      "files": ["ecosystem.config.js"],
+      "rules": { "@typescript-eslint/no-require-imports": "off" }
+    }
+  ],
+  "rules": {
+    "@next/next/no-img-element": "error"
+  }
+}

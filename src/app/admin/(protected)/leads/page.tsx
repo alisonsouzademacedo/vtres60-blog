@@ -1,0 +1,2 @@
+import { AdminPageHeading } from "@/components/admin/page-heading";import { LeadsManager } from "@/components/admin/leads-manager";import { operationsRepository } from "@/services/operations";
+export default async function Page(){const leads=await operationsRepository.listLeads();return <><AdminPageHeading eyebrow="Relacionamento" title="Leads e Newsletter" description="Consulte, filtre e exporte os contatos captados pelos formulários do portal."/><LeadsManager initial={leads}/></>}
