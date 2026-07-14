@@ -22,4 +22,14 @@ export const llm = new ChatOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   model: "gpt-4o",
   temperature: 0.4,
+  // Fase 6 — risco real encontrado na auditoria: era o UNICO provider do
+  // pipeline sem timeout/retry configurado (GNews/Pexels: 10s; Replicate:
+  // 35s+polling). Sem isso, um hang do lado da OpenAI travaria a execucao
+  // inteira do LangGraph indefinidamente — nenhum outro gate depende do
+  // LLM sem um teto de tempo. 60s cobre com folga o structured output dos
+  // 5 nos que usam este client (Drafter e o mais pesado, ate ~800 chars de
+  // corpo no prompt). maxRetries:2 e o mesmo padrao de "poucas tentativas,
+  // nunca infinito" usado no MAX_DRAFT_ATTEMPTS do Drafter.
+  timeout: 60_000,
+  maxRetries: 2,
 });

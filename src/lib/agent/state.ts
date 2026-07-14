@@ -118,6 +118,15 @@ export const AgentStateAnnotation = Annotation.Root({
     reducer: (_current, next) => next,
     default: () => undefined,
   }),
+  // Fase 6 — id da linha em agent_runs desta execucao (setado pela rota
+  // ANTES de invocar/streamar o grafo, quando createRun() teve sucesso).
+  // So existe para linkar telemetria de custo por chamada
+  // (agent_provider_usage.run_id) ao run correspondente — nao afeta
+  // roteamento nem logica de nenhum gate.
+  runId: Annotation<string | undefined>({
+    reducer: (_current, next) => next,
+    default: () => undefined,
+  }),
   // Resultado do ExactDedupeGate (URL normalizada ja existe em public.posts
   // ou em agent_queue) e do SemanticDedupeGate (mesmo evento, sem/com fato
   // novo). Ver nodes/exact-dedupe.ts e nodes/semantic-dedupe.ts.
@@ -149,6 +158,41 @@ export const AgentStateAnnotation = Annotation.Root({
   eventDateOrPeriod: Annotation<string | undefined>({
     reducer: (_current, next) => next,
     default: () => undefined,
+  }),
+  // Fase 6 — demais candidatas buscadas pelo NewsFetcher (GNews), na ordem
+  // original da API, EXCLUINDO a escolhida para sourceUrl. Usado pelo
+  // NextCandidate para tentar a proxima pauta quando um gate rejeita a
+  // atual, em vez de encerrar o grafo com a execucao inteira sem
+  // publicacao. So existe quando a execucao comecou pelo NewsFetcher
+  // (descoberta automatica) — uma URL explicita (admin/fila) nao tem fila
+  // de fallback, ver priorityRouter em workflow.ts.
+  candidateQueue: Annotation<{ url: string; title: string }[]>({
+    reducer: (_current, next) => next,
+    default: () => [],
+  }),
+  // Fase 6 — titulo da candidata atual (sourceUrl), quando conhecido. So o
+  // NewsFetcher/NextCandidate preenchem (descoberta automatica tem
+  // titulo do GNews); URL explicita via admin/fila fica undefined. Existe
+  // separado de sourceUrl so para telemetria (agent_runs.candidate_title)
+  // — antes so vivia como texto livre dentro de currentStep.
+  candidateTitle: Annotation<string | undefined>({
+    reducer: (_current, next) => next,
+    default: () => undefined,
+  }),
+  // Fase 6 — quantas candidatas esta execucao tentou no total (comeca em 1,
+  // a escolhida pelo NewsFetcher; NextCandidate incrementa a cada avanco).
+  // So para telemetria/painel (agent_runs.candidates_tried) — nao afeta
+  // roteamento.
+  candidatesTried: Annotation<number>({
+    reducer: (_current, next) => next,
+    default: () => 1,
+  }),
+  // true quando o NextCandidate tentou avancar e a candidateQueue estava
+  // vazia — sinaliza ao roteador que o grafo deve encerrar em END, nao
+  // seguir para o ExactDedupeGate com um sourceUrl desatualizado.
+  candidateExhausted: Annotation<boolean>({
+    reducer: (_current, next) => next,
+    default: () => false,
   }),
 });
 

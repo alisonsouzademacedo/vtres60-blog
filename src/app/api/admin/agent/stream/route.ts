@@ -1,5 +1,7 @@
 import { requireAdmin } from "@/lib/admin-api";
-import { agentGraph } from "@/lib/agent/workflow";
+import { deriveRunOutcome, hostnameOf } from "@/lib/agent/agent-run-outcome";
+import { createRun, finishRun } from "@/lib/agent/agent-runs-repository";
+import { agentGraph, type AgentState } from "@/lib/agent/workflow";
 
 /**
  * SSE para o terminal ao vivo do painel admin (AgentConsole). Autenticado
@@ -39,6 +41,11 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { sourceUrl?: string } | null;
   const sourceUrl = body?.sourceUrl?.trim() || undefined;
 
+  const startedAtMs = Date.now();
+  // Fase 6 — telemetria best-effort (ver comentario em cron/route.ts):
+  // agent_runs pode nao existir ainda em producao nesta fase.
+  const run = await createRun({ triggerType: "manual" }).catch(() => undefined);
+
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
@@ -49,11 +56,18 @@ export async function POST(request: Request) {
       const origin = sourceUrl ? `link direto: ${sourceUrl}` : "busca automática";
       let lastStep = "";
       let publishedPostId: string | null = null;
+      let lastState: AgentState | undefined;
       try {
-        const iterator = await agentGraph.stream({ sourceUrl, autoPublish: true }, { streamMode: "values" });
+        const iterator = await agentGraph.stream(
+          { sourceUrl, autoPublish: true, runId: run?.id },
+          // Fase 6 — mesmo motivo do cron/route.ts: NextCandidate pode
+          // percorrer ate 10 candidatas, superando o default de 25.
+          { streamMode: "values", recursionLimit: 60 },
+        );
         for await (const chunk of iterator) {
           lastStep = chunk.currentStep ?? lastStep;
           publishedPostId = chunk.publishedPostId ?? publishedPostId;
+          lastState = chunk;
           send({ currentStep: chunk.currentStep, publishedPostId: chunk.publishedPostId ?? null });
         }
         send({ done: true });
@@ -62,10 +76,29 @@ export async function POST(request: Request) {
           "agente",
           `Execução manual (${origin}) concluída: ${lastStep}` + (publishedPostId ? ` — post ${publishedPostId}` : ""),
         );
+        if (run && lastState) {
+          const outcome = deriveRunOutcome(lastState, undefined);
+          await finishRun(run.id, {
+            ...outcome,
+            durationMs: Date.now() - startedAtMs,
+            sourceName: hostnameOf(lastState.sourceUrl),
+            draftAttempts: lastState.draftAttempts,
+            materialUpdateReason: lastState.materialUpdateReason,
+          }).catch(() => undefined);
+        }
       } catch (error) {
         const message = error instanceof Error ? error.message : "Erro desconhecido no agente.";
         send({ error: message });
         await operationsRepository.log("erro", "agente", `Execução manual (${origin}) falhou: ${message}`);
+        if (run) {
+          await finishRun(run.id, {
+            status: "failed",
+            terminalReason: "operational_error",
+            candidatesTried: 1,
+            durationMs: Date.now() - startedAtMs,
+            providerErrors: { agent: message },
+          }).catch(() => undefined);
+        }
       } finally {
         controller.close();
       }

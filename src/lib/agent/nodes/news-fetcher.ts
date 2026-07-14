@@ -79,10 +79,20 @@ export async function newsFetcherNode(): Promise<AgentStateUpdate> {
     },
   ]);
 
-  const chosen = articles[index] ?? articles[0];
+  const chosenIndex = articles[index] ? index : 0;
+  const chosen = articles[chosenIndex];
+
+  // Fase 6 — as demais candidatas ficam como fallback: se um gate
+  // posterior rejeitar `chosen`, o NextCandidate consome esta fila em vez
+  // de encerrar a execucao inteira sem publicacao. Ver nodes/next-candidate.ts.
+  const candidateQueue = articles
+    .filter((_, i) => i !== chosenIndex)
+    .map((article) => ({ url: article.url, title: article.title }));
 
   return {
     sourceUrl: chosen.url,
+    candidateTitle: chosen.title,
+    candidateQueue,
     currentStep: `Pauta selecionada: "${chosen.title}"`,
   };
 }

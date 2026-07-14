@@ -14,6 +14,8 @@
   "sitemapEnabled": true,
   "googleAnalyticsId": "",
   "googleTagManagerId": "",
+  "googleAdsId": "",
+  "googleSiteVerification": "",
   "metaPixelId": "",
   "linkedinPartnerId": "",
   "organization": {

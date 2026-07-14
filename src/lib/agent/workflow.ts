@@ -6,6 +6,7 @@ import { imageProcessorNode } from "./nodes/image-processor";
 import { internalAuditorNode } from "./nodes/internal-auditor";
 import { newsFetcherNode } from "./nodes/news-fetcher";
 import { newsworthinessNode } from "./nodes/newsworthiness";
+import { nextCandidateNode } from "./nodes/next-candidate";
 import { publisherNode } from "./nodes/publisher";
 import { semanticDedupeNode } from "./nodes/semantic-dedupe";
 import { AgentStateAnnotation, type AgentState } from "./state";
@@ -36,21 +37,32 @@ function routeAfterNewsFetch(state: AgentState): "ExactDedupeGate" | typeof END 
 /**
  * Fase 3 — roteamento pos-dedupe-exato: URL unica segue para extracao de
  * conteudo; duplicidade exata (mesma URL normalizada ja em public.posts ou
- * em agent_queue) encerra o grafo SEM gastar ContentExtractor/Drafter/
- * ImageProcessor. Ver nodes/exact-dedupe.ts.
+ * em agent_queue) NAO encerra mais o grafo direto — Fase 6: segue para
+ * NextCandidate, que tenta a proxima pauta da candidateQueue antes de
+ * desistir da execucao. Ver nodes/exact-dedupe.ts e nodes/next-candidate.ts.
  */
-function routeAfterExactDedupe(state: AgentState): "ContentExtractor" | typeof END {
-  return state.dedupeStatus === "exact_duplicate" ? END : "ContentExtractor";
+function routeAfterExactDedupe(state: AgentState): "ContentExtractor" | "NextCandidate" {
+  return state.dedupeStatus === "exact_duplicate" ? "NextCandidate" : "ContentExtractor";
 }
 
 /**
  * Fase 3 — roteamento pos-noticiabilidade: pauta noticiavel segue para
  * redacao; pauta nao-noticiavel (conteudo evergreen/generico, sem evento
- * ou dado datavel) encerra o grafo ANTES do ciclo caro de
- * Drafter/InternalAuditor/ImageProcessor. Ver nodes/newsworthiness.ts.
+ * ou dado datavel) NAO encerra mais o grafo direto — Fase 6: segue para
+ * NextCandidate antes do ciclo caro de Drafter/InternalAuditor/
+ * ImageProcessor. Ver nodes/newsworthiness.ts e nodes/next-candidate.ts.
  */
-function routeAfterNewsworthiness(state: AgentState): "Drafter" | typeof END {
-  return state.isNewsworthy ? "Drafter" : END;
+function routeAfterNewsworthiness(state: AgentState): "Drafter" | "NextCandidate" {
+  return state.isNewsworthy ? "Drafter" : "NextCandidate";
+}
+
+/**
+ * Fase 6 — roteamento pos-NextCandidate: fila esgotada (candidateExhausted)
+ * encerra o grafo de fato; havendo proxima candidata, reinicia o ciclo a
+ * partir do ExactDedupeGate com o novo sourceUrl. Ver nodes/next-candidate.ts.
+ */
+function routeAfterNextCandidate(state: AgentState): "ExactDedupeGate" | typeof END {
+  return state.candidateExhausted ? END : "ExactDedupeGate";
 }
 
 /**
@@ -70,24 +82,26 @@ function routeAfterAudit(state: AgentState): "Drafter" | "SemanticDedupeGate" {
 }
 
 /**
- * Fase 3 — roteamento pos-dedupe-semantico: mesmo evento sem fato novo
- * encerra o grafo (nao gasta ImageProcessor/Publisher numa materia que nao
- * deve ser publicada); pauta unica ou com fato novo confirmado segue para
- * a imagem. Ver nodes/semantic-dedupe.ts.
+ * Fase 3 — roteamento pos-dedupe-semantico: mesmo evento sem fato novo NAO
+ * encerra mais o grafo direto — Fase 6: segue para NextCandidate (nao gasta
+ * ImageProcessor/Publisher numa materia que nao deve ser publicada, mas
+ * tenta outra pauta antes de desistir); pauta unica ou com fato novo
+ * confirmado segue para a imagem. Ver nodes/semantic-dedupe.ts.
  */
-function routeAfterSemanticDedupe(state: AgentState): "ImageProcessor" | typeof END {
-  return state.dedupeStatus === "same_event_no_material_update" ? END : "ImageProcessor";
+function routeAfterSemanticDedupe(state: AgentState): "ImageProcessor" | "NextCandidate" {
+  return state.dedupeStatus === "same_event_no_material_update" ? "NextCandidate" : "ImageProcessor";
 }
 
 /**
  * Fase 4 — roteamento pos-imagem: nenhum tier da cascata (source_og ->
- * generated_replicate -> pexels) aprovou uma imagem => image_pipeline_failed,
- * encerra o grafo SEM passar pelo Publisher. Nao ha mais placeholder
- * publicavel — uma noticia sem imagem aprovada simplesmente nao e
- * publicada. Ver nodes/image-processor.ts.
+ * generated_replicate -> pexels) aprovou uma imagem => image_pipeline_failed.
+ * NAO encerra mais o grafo direto — Fase 6: segue para NextCandidate. Nao ha
+ * placeholder publicavel — uma noticia sem imagem aprovada simplesmente nao
+ * e publicada, mas a execucao tenta outra pauta antes de desistir. Ver
+ * nodes/image-processor.ts.
  */
-function routeAfterImageProcessing(state: AgentState): "Publisher" | typeof END {
-  return state.imageResult?.status === "success" ? "Publisher" : END;
+function routeAfterImageProcessing(state: AgentState): "Publisher" | "NextCandidate" {
+  return state.imageResult?.status === "success" ? "Publisher" : "NextCandidate";
 }
 
 const graph = new StateGraph(AgentStateAnnotation)
@@ -100,6 +114,7 @@ const graph = new StateGraph(AgentStateAnnotation)
   .addNode("SemanticDedupeGate", semanticDedupeNode)
   .addNode("ImageProcessor", imageProcessorNode)
   .addNode("Publisher", publisherNode)
+  .addNode("NextCandidate", nextCandidateNode)
   .addConditionalEdges(START, priorityRouter, {
     ExactDedupeGate: "ExactDedupeGate",
     NewsFetcher: "NewsFetcher",
@@ -110,12 +125,12 @@ const graph = new StateGraph(AgentStateAnnotation)
   })
   .addConditionalEdges("ExactDedupeGate", routeAfterExactDedupe, {
     ContentExtractor: "ContentExtractor",
-    [END]: END,
+    NextCandidate: "NextCandidate",
   })
   .addEdge("ContentExtractor", "NewsworthinessGate")
   .addConditionalEdges("NewsworthinessGate", routeAfterNewsworthiness, {
     Drafter: "Drafter",
-    [END]: END,
+    NextCandidate: "NextCandidate",
   })
   .addEdge("Drafter", "InternalAuditor")
   .addConditionalEdges("InternalAuditor", routeAfterAudit, {
@@ -124,10 +139,14 @@ const graph = new StateGraph(AgentStateAnnotation)
   })
   .addConditionalEdges("SemanticDedupeGate", routeAfterSemanticDedupe, {
     ImageProcessor: "ImageProcessor",
-    [END]: END,
+    NextCandidate: "NextCandidate",
   })
   .addConditionalEdges("ImageProcessor", routeAfterImageProcessing, {
     Publisher: "Publisher",
+    NextCandidate: "NextCandidate",
+  })
+  .addConditionalEdges("NextCandidate", routeAfterNextCandidate, {
+    ExactDedupeGate: "ExactDedupeGate",
     [END]: END,
   })
   .addEdge("Publisher", END);

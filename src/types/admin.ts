@@ -43,6 +43,11 @@ export interface SeoSettings {
   sitemapEnabled: boolean;
   googleAnalyticsId: string;
   googleTagManagerId: string;
+  // Fase 6 — Google Ads (AW-XXXXXXXXX) e verificacao do Search Console,
+  // pedidos pela auditoria de Analytics/SEO. Strings vazias == nao
+  // configurado (mesmo padrao dos IDs acima).
+  googleAdsId: string;
+  googleSiteVerification: string;
   metaPixelId: string;
   linkedinPartnerId: string;
   organization: { name: string; description: string; url: string; logo: string };

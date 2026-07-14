@@ -78,6 +78,11 @@ os detalhes operacionais serão divulgados em um manual específico até o fim d
       isNewsworthy: false,
       newsworthinessReason: undefined,
       eventDateOrPeriod: undefined,
+      candidateQueue: [],
+      candidateExhausted: false,
+      candidatesTried: 1,
+      candidateTitle: undefined,
+      runId: undefined,
     };
 
     const result = await drafterNode(state);
@@ -141,6 +146,11 @@ O novo acordo passa a valer a partir de 1º de agosto de 2026 e terá vigência 
       isNewsworthy: false,
       newsworthinessReason: undefined,
       eventDateOrPeriod: undefined,
+      candidateQueue: [],
+      candidateExhausted: false,
+      candidatesTried: 1,
+      candidateTitle: undefined,
+      runId: undefined,
     };
 
     const result = await drafterNode(state);

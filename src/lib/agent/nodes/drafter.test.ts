@@ -8,6 +8,12 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/services/editorial", () => ({
   editorialRepository: { listCategories: vi.fn(), listTags: vi.fn() },
 }));
+// drafter.ts tambem importa costs/usage-repository.ts (Fase 6, captura de
+// custo real do Drafter), que por sua vez importa @/lib/supabase (cria um
+// client real no carregamento do modulo, exigindo env vars) — mock minimo
+// pelo mesmo motivo do mock de editorial acima: so para permitir importar
+// o modulo em teste, sem exercitar a chamada de fato.
+vi.mock("@/lib/agent/costs/usage-repository", () => ({ recordProviderUsage: vi.fn() }));
 
 import { DraftSchema } from "./drafter";
 

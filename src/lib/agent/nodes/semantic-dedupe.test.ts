@@ -66,6 +66,19 @@ describe("filterRecentRelevantPosts — pré-filtro determinístico", () => {
 });
 
 describe("semanticDedupeNode", () => {
+  // Fase 6 — BUG DE TESTE encontrado (não é bug de produção): diferente do
+  // describe acima, semanticDedupeNode() não aceita um `now` injetável —
+  // ele chama filterRecentRelevantPosts() usando Date.now() REAL
+  // internamente. recentPost() tem um createdAt FIXO ("2026-07-07..."),
+  // então esses testes ficavam "corretos" só enquanto a data real do
+  // sistema estivesse dentro de 7 dias daquele valor fixo — e passaram a
+  // falhar sozinhos quando o relógio real avançou além da janela (sem
+  // nenhuma mudança de código), porque o pré-filtro determinístico passou
+  // a excluir o post e o node nunca mais chegava a invocar o LLM mockado.
+  // Fix: usar um createdAt relativo a Date.now() real (1 dia atrás),
+  // sempre dentro da janela de 7 dias não importa quando o teste rode.
+  const recentIso = () => new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
   function state(overrides: Partial<AgentState> = {}): AgentState {
     return { sourceUrl: "https://novo.com/materia", finalPost: finalPost(), ...overrides } as AgentState;
   }
@@ -78,30 +91,33 @@ describe("semanticDedupeNode", () => {
   });
 
   it("same_event_no_material_update quando o LLM decide que não há fato novo", async () => {
-    listPostsMock.mockResolvedValue([recentPost()]);
+    const existing = recentPost({ createdAt: recentIso() });
+    listPostsMock.mockResolvedValue([existing]);
     invokeMock.mockResolvedValue({ dedupeStatus: "same_event_no_material_update", materialUpdateReason: null, relatedPostId: "post-existente" });
-    const result = await semanticDedupeNode(state({ finalPost: finalPost({ titulo: recentPost().title, excerpt: recentPost().excerpt }) }));
+    const result = await semanticDedupeNode(state({ finalPost: finalPost({ titulo: existing.title, excerpt: existing.excerpt }) }));
     expect(result.dedupeStatus).toBe("same_event_no_material_update");
     expect(result.materialUpdateReason).toBeUndefined();
     expect(result.relatedPostId).toBe("post-existente");
   });
 
   it("same_event_material_update preserva o materialUpdateReason", async () => {
-    listPostsMock.mockResolvedValue([recentPost()]);
+    const existing = recentPost({ createdAt: recentIso() });
+    listPostsMock.mockResolvedValue([existing]);
     invokeMock.mockResolvedValue({
       dedupeStatus: "same_event_material_update",
       materialUpdateReason: "Nova alíquota de 25% foi confirmada em 9 de julho.",
       relatedPostId: "post-existente",
     });
-    const result = await semanticDedupeNode(state({ finalPost: finalPost({ titulo: recentPost().title, excerpt: recentPost().excerpt }) }));
+    const result = await semanticDedupeNode(state({ finalPost: finalPost({ titulo: existing.title, excerpt: existing.excerpt }) }));
     expect(result.dedupeStatus).toBe("same_event_material_update");
     expect(result.materialUpdateReason).toMatch(/25%/);
   });
 
   it("relatedPostId fora da lista de posts comparados é descartado (não referencia post não validado)", async () => {
-    listPostsMock.mockResolvedValue([recentPost()]);
+    const existing = recentPost({ createdAt: recentIso() });
+    listPostsMock.mockResolvedValue([existing]);
     invokeMock.mockResolvedValue({ dedupeStatus: "same_event_no_material_update", materialUpdateReason: null, relatedPostId: "post-nao-comparado" });
-    const result = await semanticDedupeNode(state({ finalPost: finalPost({ titulo: recentPost().title, excerpt: recentPost().excerpt }) }));
+    const result = await semanticDedupeNode(state({ finalPost: finalPost({ titulo: existing.title, excerpt: existing.excerpt }) }));
     expect(result.relatedPostId).toBeUndefined();
   });
 });

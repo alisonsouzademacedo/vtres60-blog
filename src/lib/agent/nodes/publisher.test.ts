@@ -79,6 +79,11 @@ function baseState(overrides: Partial<AgentState> = {}): AgentState {
     isNewsworthy: true,
     newsworthinessReason: undefined,
     eventDateOrPeriod: undefined,
+    candidateQueue: [],
+    candidateExhausted: false,
+    candidatesTried: 1,
+    candidateTitle: undefined,
+    runId: undefined,
     ...overrides,
   };
 }

@@ -1,4 +1,6 @@
 import { after } from "next/server";
+import { deriveRunOutcome, hostnameOf } from "@/lib/agent/agent-run-outcome";
+import { createRun, finishRun } from "@/lib/agent/agent-runs-repository";
 import { isAgentRequestAuthorized } from "@/lib/agent/require-agent-auth";
 import { getOldestPendingUrl, markProcessed } from "@/lib/agent/queue-repository";
 import { agentGraph } from "@/lib/agent/workflow";
@@ -44,24 +46,69 @@ async function runAgentInBackground() {
     await markProcessed(pending.id);
   }
 
+  const startedAtMs = Date.now();
+  // Fase 6 — scheduled_for: cron-job.org dispara em ate poucos segundos do
+  // horario configurado (05:00/17:00 America/Sao_Paulo); arredondar "agora"
+  // para o minuto e uma aproximacao honesta do horario agendado, sem
+  // precisar de uma tabela de configuracao de cron separada so pra isso.
+  //
+  // .catch(() => undefined): agent_runs e telemetria BEST-EFFORT — a
+  // migration (supabase-agent-runs-schema.sql) ainda nao foi aplicada em
+  // producao nesta fase (Fase 6 nao aplica migration remota). Se a tabela
+  // nao existir ainda, createRun falha silenciosamente e `run` fica
+  // undefined; o pipeline real (operationsRepository.log, ja existente)
+  // continua funcionando normalmente e nao trava esperando telemetria.
+  // Assim que a migration for aplicada num deploy futuro, a telemetria
+  // passa a funcionar sem nenhuma mudanca de codigo adicional.
+  const scheduledFor = new Date(Math.round(startedAtMs / 60_000) * 60_000).toISOString();
+  const run = await createRun({ triggerType: "cron", scheduledFor }).catch(() => undefined);
+
   try {
-    const finalState = await agentGraph.invoke({
-      sourceUrl: pending?.url,
-      queueItemId: pending?.id,
-      autoPublish: true,
-    });
+    const finalState = await agentGraph.invoke(
+      {
+        sourceUrl: pending?.url,
+        queueItemId: pending?.id,
+        autoPublish: true,
+        runId: run?.id,
+      },
+      // Fase 6 — NextCandidate pode fazer o grafo percorrer ate 10
+      // candidatas do GNews (NewsFetcher) antes de desistir, cada uma
+      // passando por varios nos; o default do LangGraph (25 supersteps)
+      // estoura nesse pior caso e derruba a execucao com
+      // GraphRecursionError antes de esgotar a fila de fallback.
+      { recursionLimit: 60 },
+    );
     await operationsRepository.log(
       "execução",
       "agente",
       `Execução agendada (${pending ? "fila" : "RSS"}) concluída: ${finalState.currentStep}` +
         (finalState.publishedPostId ? ` — post ${finalState.publishedPostId}` : ""),
     );
+    if (run) {
+      const outcome = deriveRunOutcome(finalState, undefined);
+      await finishRun(run.id, {
+        ...outcome,
+        durationMs: Date.now() - startedAtMs,
+        sourceName: hostnameOf(finalState.sourceUrl),
+        draftAttempts: finalState.draftAttempts,
+        materialUpdateReason: finalState.materialUpdateReason,
+      }).catch(() => undefined);
+    }
   } catch (error) {
     await operationsRepository.log(
       "erro",
       "agente",
       `Execução agendada (${pending ? "fila" : "RSS"}) falhou: ${error instanceof Error ? error.message : "erro desconhecido"}`,
     );
+    if (run) {
+      await finishRun(run.id, {
+        status: "failed",
+        terminalReason: "operational_error",
+        candidatesTried: 1,
+        durationMs: Date.now() - startedAtMs,
+        providerErrors: { agent: error instanceof Error ? error.message : "erro desconhecido" },
+      }).catch(() => undefined);
+    }
   }
 }
 
