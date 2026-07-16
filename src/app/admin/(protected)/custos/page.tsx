@@ -11,9 +11,10 @@ import {
   publicationRate,
   sumCosts,
 } from "@/lib/agent/costs/aggregate-costs";
-import { listActiveBudgets, listManualPrices } from "@/lib/agent/costs/cost-settings-repository";
+import { listActiveBudgets, listManualPrices, listCurrencyRates } from "@/lib/agent/costs/cost-settings-repository";
 import { calculateEstimatedBalance } from "@/lib/agent/costs/estimated-balance";
 import { getCachedProviderHealth } from "@/lib/agent/health/provider-health";
+import { CostSettingsForm } from "@/components/admin/cost-settings-form";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -22,12 +23,13 @@ export default async function CustosPage() {
   const since7d = new Date(now - 7 * DAY_MS).toISOString();
   const since30d = new Date(now - 30 * DAY_MS).toISOString();
 
-  const [usage7d, usage30d, runs30d, budgets, manualPrices, health] = await Promise.all([
+  const [usage7d, usage30d, runs30d, budgets, manualPrices, currencyRates, health] = await Promise.all([
     listUsageSince(since7d).catch(() => null),
     listUsageSince(since30d).catch(() => null),
     listRecentRuns(500).catch(() => null),
     listActiveBudgets().catch(() => []),
     listManualPrices().catch(() => []),
+    listCurrencyRates().catch(() => []),
     getCachedProviderHealth().catch(() => ({ providers: [], cached: false })),
   ]);
 
@@ -109,6 +111,18 @@ export default async function CustosPage() {
         degradedProviders={degradedProviders.map((provider) => ({ provider: provider.provider, status: provider.status, detail: provider.detail }))}
         manualPricesCount={manualPrices.length}
       />
+      <section className="admin-card">
+        <header>
+          <div>
+            <h2>Configurações financeiras manuais</h2>
+            <p>
+              Preços manuais, orçamento/crédito inicial e câmbio manual — usados nos painéis acima conforme a
+              precedência OFFICIAL_VERIFIED &gt; MANUAL &gt; ESTIMATED &gt; UNAVAILABLE (ver resolve-price.ts).
+            </p>
+          </div>
+        </header>
+        <CostSettingsForm initialPrices={manualPrices} initialBudgets={budgets} initialCurrencyRates={currencyRates} />
+      </section>
     </>
   );
 }

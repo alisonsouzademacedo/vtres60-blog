@@ -194,6 +194,13 @@ function fromCurrencyRateRow(row: {
   };
 }
 
+/** Todas as taxas cadastradas, mais recentes primeiro — usada pela UI admin de câmbio manual. */
+export async function listCurrencyRates(): Promise<CurrencyRateEntry[]> {
+  const { data, error } = await supabaseAdmin.from("currency_rates").select("*").order("rate_date", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(fromCurrencyRateRow);
+}
+
 /** Taxa mais recente por par de moedas — usada para a conversao exibida no painel. */
 export async function latestCurrencyRate(currencyFrom: string, currencyTo = "BRL"): Promise<CurrencyRateEntry | undefined> {
   const { data, error } = await supabaseAdmin

@@ -184,7 +184,7 @@ export function CostsPanel({
         {estimatedBalances.length === 0 ? (
           <div className="admin-empty">
             <h2>Nenhum orçamento estimado configurado</h2>
-            <p>Cadastre um orçamento inicial por provider em Custos → Configurações para calcular saldo estimado aqui.</p>
+            <p>Cadastre um orçamento inicial por provider em “Configurações financeiras manuais”, abaixo, para calcular saldo estimado aqui.</p>
           </div>
         ) : (
           <div className="admin-fields" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))" }}>
