@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { llm } from "../llm";
+import { invokeWithUsageTelemetry } from "../costs/record-llm-usage";
 import { operationsRepository } from "@/services/operations";
 import { editorialRepository } from "@/services/editorial";
 import { SEMANTIC_DEDUPE_SYSTEM_PROMPT } from "../prompts";
@@ -92,9 +93,13 @@ export async function semanticDedupeNode(state: AgentState): Promise<AgentStateU
   if (!state.finalPost) {
     throw new Error("SemanticDedupeGate: finalPost ausente no state.");
   }
+  // Capturado em const: o narrowing de `state.finalPost` acima nao
+  // atravessa a closure passada a invokeWithUsageTelemetry abaixo (TS nao
+  // consegue provar que a propriedade nao mudou ate a closure rodar).
+  const finalPost = state.finalPost;
 
   const allPosts = await editorialRepository.listPosts();
-  const relevant = filterRecentRelevantPosts(state.finalPost, allPosts, state.sourceUrl);
+  const relevant = filterRecentRelevantPosts(finalPost, allPosts, state.sourceUrl);
 
   if (relevant.length === 0) {
     return {
@@ -105,11 +110,13 @@ export async function semanticDedupeNode(state: AgentState): Promise<AgentStateU
     };
   }
 
-  const judge = llm.withStructuredOutput(SemanticDedupeSchema);
-  const result = await judge.invoke([
-    { role: "system", content: SEMANTIC_DEDUPE_SYSTEM_PROMPT },
-    { role: "user", content: buildUserMessage(state.finalPost, undefined, relevant) },
-  ]);
+  const judge = llm.withStructuredOutput(SemanticDedupeSchema, { includeRaw: true });
+  const result = await invokeWithUsageTelemetry({ runId: state.runId, operation: "semantic_dedupe", modelRequested: "gpt-4o" }, () =>
+    judge.invoke([
+      { role: "system", content: SEMANTIC_DEDUPE_SYSTEM_PROMPT },
+      { role: "user", content: buildUserMessage(finalPost, undefined, relevant) },
+    ]),
+  );
 
   const relevantIds = new Set(relevant.map((post) => post.id));
   const relatedPostId = result.relatedPostId && relevantIds.has(result.relatedPostId) ? result.relatedPostId : undefined;

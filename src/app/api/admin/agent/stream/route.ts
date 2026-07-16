@@ -95,6 +95,8 @@ export async function POST(request: Request) {
             status: "failed",
             terminalReason: "operational_error",
             candidatesTried: 1,
+            candidatesFound: 0,
+            candidateHistory: [],
             durationMs: Date.now() - startedAtMs,
             providerErrors: { agent: message },
           }).catch(() => undefined);

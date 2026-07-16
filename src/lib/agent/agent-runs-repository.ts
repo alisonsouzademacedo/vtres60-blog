@@ -15,6 +15,7 @@ export interface AgentRun {
   candidateTitle?: string;
   candidateUrl?: string;
   candidatesTried: number;
+  candidatesFound: number;
   sourceName?: string;
   exactDedupeStatus?: string;
   newsworthinessStatus?: string;
@@ -26,6 +27,9 @@ export interface AgentRun {
   imageStatus?: string;
   publishedPostId?: string;
   providerErrors?: Record<string, string>;
+  errorCode?: string;
+  errorSummary?: string;
+  candidateHistory: { url: string; title: string | undefined; reason: string }[];
   createdAt: string;
 }
 
@@ -41,6 +45,7 @@ interface AgentRunRow {
   candidate_title: string | null;
   candidate_url: string | null;
   candidates_tried: number;
+  candidates_found: number;
   source_name: string | null;
   exact_dedupe_status: string | null;
   newsworthiness_status: string | null;
@@ -52,6 +57,9 @@ interface AgentRunRow {
   image_status: string | null;
   published_post_id: string | null;
   provider_errors: Record<string, string> | null;
+  error_code: string | null;
+  error_summary: string | null;
+  candidate_history: { url: string; title: string | undefined; reason: string }[] | null;
   created_at: string;
 }
 
@@ -68,6 +76,7 @@ function fromRow(row: AgentRunRow): AgentRun {
     candidateTitle: row.candidate_title ?? undefined,
     candidateUrl: row.candidate_url ?? undefined,
     candidatesTried: row.candidates_tried,
+    candidatesFound: row.candidates_found,
     sourceName: row.source_name ?? undefined,
     exactDedupeStatus: row.exact_dedupe_status ?? undefined,
     newsworthinessStatus: row.newsworthiness_status ?? undefined,
@@ -79,6 +88,9 @@ function fromRow(row: AgentRunRow): AgentRun {
     imageStatus: row.image_status ?? undefined,
     publishedPostId: row.published_post_id ?? undefined,
     providerErrors: row.provider_errors ?? undefined,
+    errorCode: row.error_code ?? undefined,
+    errorSummary: row.error_summary ?? undefined,
+    candidateHistory: row.candidate_history ?? [],
     createdAt: row.created_at,
   };
 }
@@ -123,6 +135,7 @@ export async function finishRun(runId: string, patch: FinishRunInput): Promise<v
       candidate_title: patch.candidateTitle ?? null,
       candidate_url: patch.candidateUrl ?? null,
       candidates_tried: patch.candidatesTried,
+      candidates_found: patch.candidatesFound,
       source_name: patch.sourceName ?? null,
       exact_dedupe_status: patch.exactDedupeStatus ?? null,
       newsworthiness_status: patch.newsworthinessStatus ?? null,
@@ -134,6 +147,9 @@ export async function finishRun(runId: string, patch: FinishRunInput): Promise<v
       image_status: patch.imageStatus ?? null,
       published_post_id: patch.publishedPostId ?? null,
       provider_errors: patch.providerErrors ?? null,
+      error_code: patch.errorCode ?? null,
+      error_summary: patch.errorSummary ?? null,
+      candidate_history: patch.candidateHistory ?? [],
     })
     .eq("id", runId);
   if (error) throw new Error(error.message);

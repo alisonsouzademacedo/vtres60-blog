@@ -187,12 +187,32 @@ export const AgentStateAnnotation = Annotation.Root({
     reducer: (_current, next) => next,
     default: () => 1,
   }),
+  // Fase 7 (Secao 18) — total de candidatas RETORNADAS pelo GNews nesta
+  // execucao (antes de qualquer rejeicao), distinto de candidatesTried
+  // (quantas foram de fato processadas ate o motivo terminal). So
+  // preenchido no fluxo de descoberta automatica (NewsFetcher); 0 para URL
+  // explicita via admin/fila (sem lista de candidatas do GNews).
+  candidatesFound: Annotation<number>({
+    reducer: (_current, next) => next,
+    default: () => 0,
+  }),
   // true quando o NextCandidate tentou avancar e a candidateQueue estava
   // vazia — sinaliza ao roteador que o grafo deve encerrar em END, nao
   // seguir para o ExactDedupeGate com um sourceUrl desatualizado.
   candidateExhausted: Annotation<boolean>({
     reducer: (_current, next) => next,
     default: () => false,
+  }),
+  // Fase 7 (Secao 18/20) — trilha de TODAS as candidatas rejeitadas nesta
+  // execucao, com o motivo de cada uma (agent_runs guardava so a ULTIMA
+  // candidata; o painel Operacao do Agente precisa mostrar o motivo de
+  // rejeicao de CADA candidata tentada). Preenchido por next-candidate.ts
+  // ANTES de resetar o state para a proxima tentativa — nunca resetado
+  // (acumula do inicio ao fim do run, ao contrario dos campos transitorios
+  // abaixo).
+  candidateHistory: Annotation<{ url: string; title: string | undefined; reason: string }[]>({
+    reducer: (_current, next) => next,
+    default: () => [],
   }),
 });
 

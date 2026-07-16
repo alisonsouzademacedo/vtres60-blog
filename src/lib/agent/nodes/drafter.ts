@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { calculateOpenAiCost } from "../costs/calculate-cost";
-import { recordProviderUsage } from "../costs/usage-repository";
+import { invokeWithUsageTelemetry } from "../costs/record-llm-usage";
 import { llm } from "../llm";
 import { DRAFTER_SYSTEM_PROMPT } from "../prompts";
 import type { AgentState, AgentStateUpdate } from "../state";
@@ -111,54 +110,23 @@ export async function drafterNode(state: AgentState): Promise<AgentStateUpdate> 
   const today = new Date().toISOString().slice(0, 10);
   const { block: taxonomyBlock } = await loadTaxonomyBlock();
 
-  const startedAt = new Date().toISOString();
-  const { raw, parsed: result } = await writer.invoke([
-    { role: "system", content: DRAFTER_SYSTEM_PROMPT },
-    { role: "user", content: taxonomyBlock },
-    {
-      role: "user",
-      content: `Data de hoje: ${today}\n\nMateria original para reescrever:\n\n${state.sourceText}${feedbackBlock}`,
-    },
-  ]);
-
-  // Fase 6 — o tipo generico `BaseMessage` (retorno de includeRaw:true
-  // nesta versao do @langchain/core) nao declara `usage_metadata`, mas em
-  // runtime, para ChatOpenAI, `raw` e sempre um AIMessage e realmente
-  // carrega esse campo. Cast local e seguro em vez de importar a classe
-  // AIMessage so para um `instanceof`.
-  const usageMetadata = (
-    raw as { usage_metadata?: { input_tokens: number; output_tokens: number; total_tokens: number; input_token_details?: { cache_read?: number } } }
-  ).usage_metadata;
-
-  // Telemetria de custo best-effort (Secao 31/32) — nunca bloqueia nem
-  // derruba o Drafter se agent_provider_usage ainda nao existir (migration
-  // pendente nesta fase, ver comentario em cron/route.ts) ou se o
-  // provider nao devolver usage_metadata por algum motivo.
-  if (usageMetadata) {
-    const cachedInputTokens = usageMetadata.input_token_details?.cache_read ?? 0;
-    const cost = calculateOpenAiCost({
-      inputTokens: usageMetadata.input_tokens,
-      outputTokens: usageMetadata.output_tokens,
-      cachedInputTokens,
-    });
-    await recordProviderUsage({
-      runId: state.runId,
-      provider: "openai",
-      operation: "draft_generation",
-      model: "gpt-4o",
-      startedAt,
-      finishedAt: new Date().toISOString(),
-      usage: {
-        input_tokens: usageMetadata.input_tokens,
-        output_tokens: usageMetadata.output_tokens,
-        cached_input_tokens: cachedInputTokens,
-        total_tokens: usageMetadata.total_tokens,
-      },
-      currency: "USD",
-      estimatedCost: cost.costUsd,
-      costStatus: cost.status,
-    }).catch(() => undefined);
-  }
+  // Fase 7 (Secao 7) — instrumentacao centralizada em record-llm-usage.ts,
+  // reaproveitada pelos 5 nos que chamam a OpenAI (antes, so este node
+  // tinha essa telemetria inline como prova de conceito da Fase 6).
+  // attemptNumber = state.draftAttempts + 1: a proxima tentativa desta
+  // execucao (0-indexed no state, 1-indexed no numero real da tentativa).
+  const result = await invokeWithUsageTelemetry(
+    { runId: state.runId, operation: "draft_generation", modelRequested: "gpt-4o", attemptNumber: state.draftAttempts + 1 },
+    () =>
+      writer.invoke([
+        { role: "system", content: DRAFTER_SYSTEM_PROMPT },
+        { role: "user", content: taxonomyBlock },
+        {
+          role: "user",
+          content: `Data de hoje: ${today}\n\nMateria original para reescrever:\n\n${state.sourceText}${feedbackBlock}`,
+        },
+      ]),
+  );
 
   // O LLM as vezes devolve a STRING literal "null" (ou vazia) em vez do
   // valor null de verdade no campo nullable — visto em producao: isso e

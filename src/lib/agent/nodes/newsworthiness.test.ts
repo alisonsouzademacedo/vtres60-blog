@@ -1,9 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const invokeMock = vi.fn();
-vi.mock("../llm", () => ({ llm: { withStructuredOutput: () => ({ invoke: invokeMock }) } }));
+// Fase 7 — newsworthinessNode agora chama .invoke() com includeRaw:true
+// (formato {raw,parsed}); o wrapper abaixo deixa os testes existentes
+// controlarem so o `parsed` via invokeMock.mockResolvedValue(...), como
+// antes.
+vi.mock("../llm", () => ({
+  llm: { withStructuredOutput: () => ({ invoke: async (...args: unknown[]) => ({ raw: {}, parsed: await invokeMock(...args) }) }) },
+}));
 const logMock = vi.fn();
 vi.mock("@/services/operations", () => ({ operationsRepository: { log: (...a: unknown[]) => logMock(...a) } }));
+vi.mock("../costs/usage-repository", () => ({ recordProviderUsage: vi.fn().mockResolvedValue(undefined) }));
 
 import type { AgentState } from "../state";
 import { newsworthinessNode } from "./newsworthiness";

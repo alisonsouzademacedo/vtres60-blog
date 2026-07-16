@@ -1,3 +1,4 @@
+import { normalizeError } from "./costs/record-llm-usage";
 import type { AgentState } from "./state";
 
 export type AgentRunStatus = "running" | "published" | "draft" | "rejected" | "failed";
@@ -26,9 +27,13 @@ export interface AgentRunOutcome {
   imageTier?: string;
   imageStatus?: string;
   candidatesTried: number;
+  candidatesFound: number;
+  candidateHistory: { url: string; title: string | undefined; reason: string }[];
   candidateUrl?: string;
   candidateTitle?: string;
   publishedPostId?: string;
+  errorCode?: string;
+  errorSummary?: string;
 }
 
 function semanticDedupeStatusFrom(state: AgentState): AgentRunOutcome["semanticDedupeStatus"] {
@@ -99,13 +104,16 @@ export function deriveRunOutcome(state: AgentState, error: unknown): AgentRunOut
     imageTier: imageTierFrom(state),
     imageStatus: imageStatusFrom(state),
     candidatesTried: state.candidatesTried,
+    candidatesFound: state.candidatesFound,
+    candidateHistory: state.candidateHistory,
     candidateUrl: state.sourceUrl,
     candidateTitle: state.candidateTitle,
     publishedPostId: state.publishedPostId,
   };
 
   if (error !== undefined) {
-    return { ...shared, status: "failed", terminalReason: "operational_error" };
+    const normalized = normalizeError(error);
+    return { ...shared, status: "failed", terminalReason: "operational_error", errorCode: normalized.code, errorSummary: normalized.message };
   }
 
   if (state.publishedPostId) {

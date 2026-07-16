@@ -7,5 +7,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // e2e/ roda via Playwright (npm run test:e2e), nao vitest.
+    exclude: ["**/node_modules/**", "**/e2e/**"],
   },
 });

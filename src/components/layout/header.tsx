@@ -20,7 +20,7 @@ export function Header({settings,branding,categories}:{settings:PortalSettings;b
           <div className={styles.edition}>{settings.subtitle.toUpperCase()}</div>
           <div className={styles.actions}>
             <Link className={styles.search} href="/buscar"><Search size={18} /><span>Buscar</span></Link>
-            <Link className={styles.subscribe} href={settings.headerButton.url}><Bell size={16} /> {settings.headerButton.label}</Link>
+            <Link className={styles.subscribe} href={settings.headerButton.url}><Bell size={16} /> <span>{settings.headerButton.label}</span></Link>
           </div>
         </div>
         <nav className={styles.categories} aria-label="Categorias principais">

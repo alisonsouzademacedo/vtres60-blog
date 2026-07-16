@@ -49,6 +49,10 @@ export interface SeoSettings {
   googleAdsId: string;
   googleSiteVerification: string;
   metaPixelId: string;
+  // Fase 7 — quando true, o Pixel acima deve ser gerenciado DENTRO do GTM
+  // em vez de carregado diretamente por este componente; evita PageView
+  // duplicado caso o gestor de tráfego também cadastre o mesmo Pixel no GTM.
+  metaPixelManagedByGtm: boolean;
   linkedinPartnerId: string;
   organization: { name: string; description: string; url: string; logo: string };
 }

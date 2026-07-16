@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { averageCost, projectMonthlyCost, publicationRate, sumCosts } from "./aggregate-costs";
+import { averageCost, averageCostForRuns, costByRunId, groupCostsByProvider, projectMonthlyCost, publicationRate, sumCosts } from "./aggregate-costs";
 import type { UsageRow } from "./usage-repository";
 
 function row(overrides: Partial<UsageRow> = {}): UsageRow {
@@ -11,6 +11,7 @@ function row(overrides: Partial<UsageRow> = {}): UsageRow {
     model: "gpt-4o",
     estimatedCost: 0.01,
     costStatus: "confirmed",
+    success: true,
     publishedPostId: undefined,
     createdAt: "2026-07-14T10:00:00.000Z",
     ...overrides,
@@ -70,5 +71,58 @@ describe("projectMonthlyCost", () => {
 
   it("retorna undefined quando windowDays <= 0 (nunca divide por zero)", () => {
     expect(projectMonthlyCost(1, 0)).toBeUndefined();
+  });
+});
+
+describe("costByRunId", () => {
+  it("soma múltiplas linhas do mesmo run_id (ex: Drafter + InternalAuditor com retries)", () => {
+    const totals = costByRunId([
+      row({ runId: "run-a", costStatus: "confirmed", estimatedCost: 0.01 }),
+      row({ runId: "run-a", costStatus: "confirmed", estimatedCost: 0.02 }),
+      row({ runId: "run-b", costStatus: "estimated", estimatedCost: 0.05 }),
+    ]);
+    expect(totals.get("run-a")).toBeCloseTo(0.03, 6);
+    expect(totals.get("run-b")).toBeCloseTo(0.05, 6);
+  });
+
+  it("ignora linhas unavailable e sem runId", () => {
+    const totals = costByRunId([row({ runId: "run-a", costStatus: "unavailable", estimatedCost: undefined }), row({ runId: undefined })]);
+    expect(totals.has("run-a")).toBe(false);
+    expect(totals.size).toBe(0);
+  });
+});
+
+describe("averageCostForRuns", () => {
+  it("calcula média incluindo runs sem nenhuma linha de custo como 0 (não ignora)", () => {
+    const costByRun = new Map([["run-a", 0.1]]);
+    expect(averageCostForRuns(["run-a", "run-b"], costByRun)).toBeCloseTo(0.05, 6);
+  });
+
+  it("retorna undefined para lista vazia de runs", () => {
+    expect(averageCostForRuns([], new Map())).toBeUndefined();
+  });
+});
+
+describe("groupCostsByProvider", () => {
+  it("agrupa por provider, soma confirmed/estimated separadamente e conta falhas", () => {
+    const result = groupCostsByProvider([
+      row({ provider: "openai", costStatus: "confirmed", estimatedCost: 0.01, success: true }),
+      row({ provider: "openai", costStatus: "confirmed", estimatedCost: 0.02, success: false }),
+      row({ provider: "gnews", costStatus: "unavailable", estimatedCost: undefined, success: true }),
+    ]);
+    const openai = result.find((r) => r.provider === "openai");
+    expect(openai?.confirmedTotal).toBeCloseTo(0.03, 6);
+    expect(openai?.callCount).toBe(2);
+    expect(openai?.failureCount).toBe(1);
+    const gnews = result.find((r) => r.provider === "gnews");
+    expect(gnews?.unavailableCount).toBe(1);
+  });
+
+  it("ordena do maior para o menor gasto total", () => {
+    const result = groupCostsByProvider([
+      row({ provider: "gnews", costStatus: "confirmed", estimatedCost: 1 }),
+      row({ provider: "openai", costStatus: "confirmed", estimatedCost: 10 }),
+    ]);
+    expect(result.map((r) => r.provider)).toEqual(["openai", "gnews"]);
   });
 });

@@ -57,6 +57,7 @@ interface FinalizeParams {
   sourceUrl: string | undefined;
   credit: string | undefined;
   stableId: string;
+  runId: string | undefined;
 }
 
 // Passo final comum aos 3 tiers, uma vez que ja se tem um buffer decodificavel
@@ -72,7 +73,7 @@ async function finalizeCandidate(params: FinalizeParams): Promise<ImageProcessin
   }
 
   const storagePath = buildStoragePath(params.stableId, processed.hash);
-  const uploaded = await uploadToEditorialStorage(storagePath, processed.buffer);
+  const uploaded = await uploadToEditorialStorage(storagePath, processed.buffer, params.runId);
   if (!uploaded.ok) {
     await logTier("image_tier_failure", params.origin, { reason: "storage_upload_failed" satisfies ImageTierFailureReason });
     return undefined;
@@ -139,6 +140,7 @@ async function trySourceOg(state: AgentState): Promise<ImageProcessingResult | u
     sourceUrl: state.ogImage,
     credit: undefined,
     stableId: stableIdFor(state),
+    runId: state.runId,
   });
 }
 
@@ -157,7 +159,7 @@ async function tryReplicate(state: AgentState, categoryName: string | undefined)
     categoryName,
   });
 
-  const providerUrl = await generateWithReplicate(prompt);
+  const providerUrl = await generateWithReplicate(prompt, state.runId);
   if (!providerUrl) {
     await logTier("image_tier_failure", "generated_replicate", { reason: "generation_failed" satisfies ImageTierFailureReason });
     return undefined;
@@ -183,6 +185,7 @@ async function tryReplicate(state: AgentState, categoryName: string | undefined)
     sourceUrl: providerUrl,
     credit: undefined,
     stableId: stableIdFor(state),
+    runId: state.runId,
   });
 }
 
@@ -191,7 +194,7 @@ async function tryReplicate(state: AgentState, categoryName: string | undefined)
 async function tryPexels(state: AgentState): Promise<ImageProcessingResult | undefined> {
   await logTier("image_tier_start", "pexels", {});
 
-  const candidates = await fetchPexelsCandidates(state.imageKeyword);
+  const candidates = await fetchPexelsCandidates(state.imageKeyword, state.runId);
   if (!candidates.length) {
     await logTier("image_tier_failure", "pexels", { reason: "no_pexels_candidate" satisfies ImageTierFailureReason });
     return undefined;
@@ -215,6 +218,7 @@ async function tryPexels(state: AgentState): Promise<ImageProcessingResult | und
       sourceUrl: candidate.pageUrl ?? candidate.url,
       credit,
       stableId: stableIdFor(state),
+      runId: state.runId,
     });
     if (finalized) return finalized;
   }

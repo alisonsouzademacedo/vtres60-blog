@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { llm } from "../llm";
+import { invokeWithUsageTelemetry } from "../costs/record-llm-usage";
 import { AUDITOR_SYSTEM_PROMPT } from "../prompts";
 import { findBannedClosingPhrases, validateDirectQuotes, validateExcerpt, validateImpact } from "../text-guards";
 import { isValidCategoryId, loadValidCategories } from "../taxonomies";
@@ -124,21 +125,29 @@ export async function internalAuditorNode(state: AgentState): Promise<AgentState
     };
   }
 
-  const auditor = llm.withStructuredOutput(AuditSchema);
+  const auditor = llm.withStructuredOutput(AuditSchema, { includeRaw: true });
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const verdict = await auditor.invoke([
-    { role: "system", content: AUDITOR_SYSTEM_PROMPT },
-    {
-      role: "user",
-      content:
-        `Data de hoje: ${today}\n\n` +
-        `TÍTULO PROPOSTO:\n${titulo}\n\n` +
-        `DOMÍNIO DA EMPRESA PROPOSTO: ${state.companyDomain ?? "nenhum"}\n\n` +
-        `TEXTO ORIGINAL:\n${state.sourceText}\n\n---\n\nTEXTO REESCRITO:\n${state.draftText}`,
-    },
-  ]);
+  // attemptNumber = state.draftAttempts: o Drafter ja incrementou este
+  // contador ANTES do grafo chegar aqui (mesma tentativa, dois lados do
+  // ciclo Drafter<->InternalAuditor) — Secao 8: cada tentativa real vira
+  // sua propria linha em agent_provider_usage, nunca sobrescrita.
+  const verdict = await invokeWithUsageTelemetry(
+    { runId: state.runId, operation: "internal_audit", modelRequested: "gpt-4o", attemptNumber: state.draftAttempts },
+    () =>
+      auditor.invoke([
+        { role: "system", content: AUDITOR_SYSTEM_PROMPT },
+        {
+          role: "user",
+          content:
+            `Data de hoje: ${today}\n\n` +
+            `TÍTULO PROPOSTO:\n${titulo}\n\n` +
+            `DOMÍNIO DA EMPRESA PROPOSTO: ${state.companyDomain ?? "nenhum"}\n\n` +
+            `TEXTO ORIGINAL:\n${state.sourceText}\n\n---\n\nTEXTO REESCRITO:\n${state.draftText}`,
+        },
+      ]),
+  );
 
   if (!verdict.approved) {
     // eslint-disable-next-line no-console -- mesmo motivo do log mecanico acima.

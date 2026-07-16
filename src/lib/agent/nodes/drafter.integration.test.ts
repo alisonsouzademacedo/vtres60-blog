@@ -81,6 +81,8 @@ os detalhes operacionais serão divulgados em um manual específico até o fim d
       candidateQueue: [],
       candidateExhausted: false,
       candidatesTried: 1,
+      candidatesFound: 1,
+      candidateHistory: [],
       candidateTitle: undefined,
       runId: undefined,
     };
@@ -149,6 +151,8 @@ O novo acordo passa a valer a partir de 1º de agosto de 2026 e terá vigência 
       candidateQueue: [],
       candidateExhausted: false,
       candidatesTried: 1,
+      candidatesFound: 1,
+      candidateHistory: [],
       candidateTitle: undefined,
       runId: undefined,
     };

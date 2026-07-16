@@ -1,4 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+// agent-run-outcome.ts importa normalizeError de costs/record-llm-usage.ts,
+// que por sua vez importa costs/usage-repository.ts (createClient real do
+// Supabase) so por causa de outro export daquele modulo — mockado aqui
+// pelo mesmo motivo de drafter.test.ts (evita a cadeia de import derrubar
+// o teste), mesmo essa suite nunca chamando recordProviderUsage.
+vi.mock("./costs/usage-repository", () => ({ recordProviderUsage: vi.fn() }));
 import type { AgentState } from "./state";
 import { deriveRunOutcome } from "./agent-run-outcome";
 
@@ -41,6 +47,24 @@ describe("deriveRunOutcome", () => {
     const result = deriveRunOutcome(baseState({ sourceUrl: "https://exemplo.com/a" }), new Error("timeout"));
     expect(result.status).toBe("failed");
     expect(result.terminalReason).toBe("operational_error");
+  });
+
+  it("erro lançado => errorCode/errorSummary normalizados e populados (Fase 7, Secao 18)", () => {
+    const result = deriveRunOutcome(baseState({}), new Error("Supabase indisponível"));
+    expect(result.errorCode).toBe("Error");
+    expect(result.errorSummary).toBe("Supabase indisponível");
+  });
+
+  it("erro não-Error lançado => errorCode/errorSummary nunca inventam detalhe", () => {
+    const result = deriveRunOutcome(baseState({}), "algo lançado como string");
+    expect(result.errorCode).toBe("UnknownError");
+    expect(typeof result.errorSummary).toBe("string");
+  });
+
+  it("sem erro => errorCode/errorSummary ausentes", () => {
+    const result = deriveRunOutcome(baseState({ sourceUrl: "https://exemplo.com/a" }), undefined);
+    expect(result.errorCode).toBeUndefined();
+    expect(result.errorSummary).toBeUndefined();
   });
 
   it("nenhuma candidata encontrada pelo NewsFetcher => rejected/no_candidate", () => {
@@ -188,5 +212,10 @@ describe("deriveRunOutcome", () => {
   it("candidatesTried é repassado como está no state", () => {
     const result = deriveRunOutcome(baseState({ candidatesTried: 4 }), undefined);
     expect(result.candidatesTried).toBe(4);
+  });
+
+  it("candidatesFound é repassado como está no state (Fase 7, Secao 18)", () => {
+    const result = deriveRunOutcome(baseState({ candidatesFound: 10 }), undefined);
+    expect(result.candidatesFound).toBe(10);
   });
 });

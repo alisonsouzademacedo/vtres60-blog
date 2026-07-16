@@ -32,6 +32,14 @@ function reasonLabel(run: Pick<AgentRun, "status" | "terminalReason">): string {
   return TERMINAL_REASON_LABELS[run.terminalReason] ?? run.terminalReason;
 }
 
+// Fase 7 (Secao 20) — reusa os mesmos rotulos de terminal_reason para o
+// motivo de rejeicao POR CANDIDATA (candidateHistory), ja que os 4 valores
+// possiveis (exact_duplicate/not_newsworthy/same_event_no_material_update/
+// image_pipeline_failed) sao um subconjunto do mesmo vocabulario.
+function candidateReasonLabel(reason: string): string {
+  return TERMINAL_REASON_LABELS[reason] ?? reason;
+}
+
 function formatDuration(ms: number | undefined): string {
   if (ms === undefined) return "—";
   return `${(ms / 1000).toFixed(1)}s`;
@@ -145,8 +153,25 @@ export function AgentOperationsSummary({
                 {run.triggerType === "cron" ? "Agendada" : run.triggerType === "manual" ? "Manual" : "Dry-run"} ·{" "}
                 {reasonLabel(run)}
               </small>
+              {run.candidateHistory.length > 0 && (
+                <details style={{ marginTop: 6 }}>
+                  <summary>Ver {run.candidateHistory.length} candidata(s) rejeitada(s)</summary>
+                  <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+                    {run.candidateHistory.map((candidate, index) => (
+                      <li key={`${run.id}-${index}`}>
+                        <small>
+                          {candidate.title ?? candidate.url} — {candidateReasonLabel(candidate.reason)}
+                        </small>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
             </div>
-            <span className="admin-table-meta">{run.candidatesTried}×</span>
+            <span className="admin-table-meta">
+              {run.candidatesTried}
+              {run.candidatesFound > 0 ? `/${run.candidatesFound}` : ""}×
+            </span>
             <span className="admin-status" data-status={run.status}>
               {STATUS_LABELS[run.status] ?? run.status}
             </span>

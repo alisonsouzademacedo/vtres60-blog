@@ -32,6 +32,12 @@ img { max-width: 100%; }
 .section { padding-block: 72px; }
 .featured-section { --line: rgba(16,24,40,.1); --surface: #fff; padding-top: 56px; color: #101828; background: #fff; border-block: 1px solid rgba(16,24,40,.08); }
 .featured-section .section-link { color: #344054; }
+/* Fase 7 (Secao 26/28) — .eyebrow usa a cor clara padrao (#82aefc, pensada
+   para fundo escuro); .featured-section tem fundo branco, e essa
+   combinacao falhava contraste AA (2.23:1, axe-core confirmou). Mesma cor
+   ja usada como override em outras seções de fundo claro (.radar, .main
+   de categorias etc — ver home.module.css/categories.module.css). */
+.featured-section .eyebrow { color: #3268bd; }
 .section-tight { padding-block: 48px; }
 .hairline { border-color: var(--line); }
 .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: #82aefc; text-transform: uppercase; letter-spacing: .13em; font-size: 11px; font-weight: 800; }

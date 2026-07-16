@@ -1,4 +1,6 @@
 import axios from "axios";
+import { calculateReplicateImageCost } from "../costs/calculate-cost";
+import { recordProviderUsage } from "../costs/usage-repository";
 
 export interface PexelsCandidate {
   url: string; // src.original — maior resolucao disponivel para download/QA
@@ -9,20 +11,42 @@ export interface PexelsCandidate {
 
 const PEXELS_CANDIDATE_COUNT = 3;
 
-// Pexels: pequeno conjunto controlado de candidatas (nao apenas a
-// primeira) — o ImageProcessor decide entre elas com base em QA/dedupe
-// real (download + decode + resolucao + hash), nao so na ordem de retorno
-// da API.
-export async function fetchPexelsCandidates(keyword: string): Promise<PexelsCandidate[]> {
+// Fase 7 (Secao 11) — instrumenta a busca real ao Pexels: quantidade de
+// buscas (uma linha por chamada desta funcao), latency, status, quota
+// headers quando presentes, candidatas retornadas, falhas. "Candidata
+// rejeitada/selecionada" e decisao POSTERIOR (download+QA em
+// image-processor.ts, ja logada via operationsRepository/logTier) — nao
+// duplicada aqui. Pexels e gratuito no plano atual desta conta —
+// cost_status="unavailable" sempre, nunca um custo monetario inventado
+// (Secao 11/49).
+export async function fetchPexelsCandidates(keyword: string, runId?: string): Promise<PexelsCandidate[]> {
   const apiKey = process.env.PEXELS_API_KEY;
   if (!apiKey || !keyword) return [];
+  const startedAt = new Date().toISOString();
   try {
-    const { data } = await axios.get("https://api.pexels.com/v1/search", {
+    const response = await axios.get("https://api.pexels.com/v1/search", {
       params: { query: keyword, per_page: PEXELS_CANDIDATE_COUNT, orientation: "landscape" },
       headers: { Authorization: apiKey },
       timeout: 10_000,
     });
-    const photos = Array.isArray(data?.photos) ? data.photos : [];
+    const finishedAt = new Date().toISOString();
+    const photos = Array.isArray(response.data?.photos) ? response.data.photos : [];
+    const quotaHeaders: Record<string, unknown> = {};
+    const headers = response.headers ?? {};
+    for (const key of ["x-ratelimit-limit", "x-ratelimit-remaining", "x-ratelimit-reset"]) {
+      if (headers[key] !== undefined) quotaHeaders[key] = headers[key];
+    }
+    await recordProviderUsage({
+      runId,
+      provider: "pexels",
+      operation: "pexels_search",
+      startedAt,
+      finishedAt,
+      durationMs: Date.parse(finishedAt) - Date.parse(startedAt),
+      usage: { status: response.status, candidates_returned: photos.length, ...(Object.keys(quotaHeaders).length ? { quota_headers: quotaHeaders } : {}) },
+      costStatus: "unavailable",
+      success: true,
+    }).catch(() => undefined);
     return photos
       .map((photo: Record<string, unknown>) => {
         const src = photo.src as Record<string, unknown> | undefined;
@@ -36,7 +60,20 @@ export async function fetchPexelsCandidates(keyword: string): Promise<PexelsCand
         };
       })
       .filter((candidate: PexelsCandidate | undefined): candidate is PexelsCandidate => Boolean(candidate));
-  } catch {
+  } catch (error) {
+    const finishedAt = new Date().toISOString();
+    await recordProviderUsage({
+      runId,
+      provider: "pexels",
+      operation: "pexels_search",
+      startedAt,
+      finishedAt,
+      durationMs: Date.parse(finishedAt) - Date.parse(startedAt),
+      costStatus: "unavailable",
+      success: false,
+      errorCode: axios.isAxiosError(error) ? `HTTP_${error.response?.status ?? "network"}` : "UnknownError",
+      errorMessage: axios.isAxiosError(error) ? error.message.slice(0, 500) : "Erro nao normalizavel na busca Pexels.",
+    }).catch(() => undefined);
     return [];
   }
 }
@@ -45,6 +82,8 @@ interface ReplicatePrediction {
   id: string;
   status: "starting" | "processing" | "succeeded" | "failed" | "canceled";
   output: string[] | string | null;
+  error?: string | null;
+  metrics?: { predict_time?: number };
 }
 
 function extractReplicateUrl(output: ReplicatePrediction["output"]): string | undefined {
@@ -52,15 +91,28 @@ function extractReplicateUrl(output: ReplicatePrediction["output"]): string | un
   return Array.isArray(output) ? output[0] : output;
 }
 
+const REPLICATE_MODEL = "black-forest-labs/flux-schnell";
+
 // Replicate/Flux-schnell — provider e modelo preservados da Fase 3 (so o
 // prompt mudou, ver replicate-prompt.ts). Endpoint de "modelo oficial"
 // (nao fixa version hash). Qualquer falha (402 sem credito, rede, timeout)
 // e capturada graciosamente — devolve undefined, quem chama cai pro tier
 // seguinte.
-export async function generateWithReplicate(prompt: string): Promise<string | undefined> {
+//
+// Fase 7 (Secao 10) — instrumenta prediction id, status, timestamps,
+// latency, metrics.predict_time (compute duration real, quando o
+// provider devolve — nem toda resposta traz esse campo), erro/codigo de
+// billing (402 sem credito, confirmado na Fase 6 para esta conta) e
+// sucesso/falha. Custo via calculateReplicateImageCost() — sempre
+// status="estimated" (Replicate nao devolve custo exato na resposta desta
+// API, ver comentario em calculate-cost.ts); falha = custo 0, documentado
+// como simplificacao deliberada la mesmo.
+export async function generateWithReplicate(prompt: string, runId?: string): Promise<string | undefined> {
   const token = process.env.REPLICATE_API_TOKEN;
   if (!token) return undefined;
 
+  const startedAt = new Date().toISOString();
+  let predictionId: string | undefined;
   try {
     const { data: prediction } = await axios.post<ReplicatePrediction>(
       "https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions",
@@ -74,6 +126,7 @@ export async function generateWithReplicate(prompt: string): Promise<string | un
         timeout: 35_000,
       },
     );
+    predictionId = prediction.id;
 
     let current = prediction;
     for (
@@ -89,8 +142,49 @@ export async function generateWithReplicate(prompt: string): Promise<string | un
       current = data;
     }
 
-    return current.status === "succeeded" ? extractReplicateUrl(current.output) : undefined;
-  } catch {
+    const finishedAt = new Date().toISOString();
+    const succeeded = current.status === "succeeded";
+    const cost = calculateReplicateImageCost({ succeeded });
+    await recordProviderUsage({
+      runId,
+      provider: "replicate",
+      operation: "image_generation",
+      model: REPLICATE_MODEL,
+      requestId: current.id,
+      startedAt,
+      finishedAt,
+      durationMs: Date.parse(finishedAt) - Date.parse(startedAt),
+      usage: { status: current.status, ...(current.metrics?.predict_time !== undefined ? { predict_time_s: current.metrics.predict_time } : {}) },
+      currency: "USD",
+      estimatedCost: cost.costUsd,
+      costStatus: cost.status,
+      success: succeeded,
+      errorCode: succeeded ? undefined : "PredictionNotSucceeded",
+      errorMessage: succeeded ? undefined : (current.error ?? `status=${current.status}`)?.slice(0, 500),
+    }).catch(() => undefined);
+
+    return succeeded ? extractReplicateUrl(current.output) : undefined;
+  } catch (error) {
+    const finishedAt = new Date().toISOString();
+    const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+    // 402 = sem credito (Fase 6 confirmou esse estado para esta conta) —
+    // codigo distinto para o painel diferenciar "sem saldo" de outras
+    // falhas (rede/timeout/5xx) sem precisar parsear a mensagem.
+    const errorCode = status === 402 ? "InsufficientCredit" : axios.isAxiosError(error) ? `HTTP_${status ?? "network"}` : "UnknownError";
+    await recordProviderUsage({
+      runId,
+      provider: "replicate",
+      operation: "image_generation",
+      model: REPLICATE_MODEL,
+      requestId: predictionId,
+      startedAt,
+      finishedAt,
+      durationMs: Date.parse(finishedAt) - Date.parse(startedAt),
+      costStatus: "unavailable",
+      success: false,
+      errorCode,
+      errorMessage: axios.isAxiosError(error) ? error.message.slice(0, 500) : "Erro nao normalizavel na geracao Replicate.",
+    }).catch(() => undefined);
     return undefined;
   }
 }

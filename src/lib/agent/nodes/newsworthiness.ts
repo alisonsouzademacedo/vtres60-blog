@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { llm } from "../llm";
+import { invokeWithUsageTelemetry } from "../costs/record-llm-usage";
 import { operationsRepository } from "@/services/operations";
 import { NEWSWORTHINESS_SYSTEM_PROMPT } from "../prompts";
 import type { AgentState, AgentStateUpdate } from "../state";
@@ -28,11 +29,13 @@ const NewsworthinessSchema = z.object({
  * sera descartada — que e o desperdicio que esta posicao evita.
  */
 export async function newsworthinessNode(state: AgentState): Promise<AgentStateUpdate> {
-  const judge = llm.withStructuredOutput(NewsworthinessSchema);
-  const result = await judge.invoke([
-    { role: "system", content: NEWSWORTHINESS_SYSTEM_PROMPT },
-    { role: "user", content: `URL: ${state.sourceUrl ?? "desconhecida"}\n\nTEXTO EXTRAÍDO:\n${state.sourceText}` },
-  ]);
+  const judge = llm.withStructuredOutput(NewsworthinessSchema, { includeRaw: true });
+  const result = await invokeWithUsageTelemetry({ runId: state.runId, operation: "newsworthiness", modelRequested: "gpt-4o" }, () =>
+    judge.invoke([
+      { role: "system", content: NEWSWORTHINESS_SYSTEM_PROMPT },
+      { role: "user", content: `URL: ${state.sourceUrl ?? "desconhecida"}\n\nTEXTO EXTRAÍDO:\n${state.sourceText}` },
+    ]),
+  );
 
   await operationsRepository.log(
     "newsworthiness",

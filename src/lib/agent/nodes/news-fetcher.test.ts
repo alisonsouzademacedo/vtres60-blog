@@ -1,11 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getMock = vi.fn();
-vi.mock("axios", () => ({ default: { get: (...a: unknown[]) => getMock(...a) } }));
+vi.mock("axios", () => ({ default: { get: (...a: unknown[]) => getMock(...a), isAxiosError: () => false } }));
 const invokeMock = vi.fn();
 vi.mock("../llm", () => ({ llm: { withStructuredOutput: () => ({ invoke: invokeMock }) } }));
+// Fase 7 — news-fetcher.ts agora grava telemetria (GNews + escolha via LLM)
+// e por isso precisa de `state.runId`; usage-repository.ts importa
+// @/lib/supabase (createClient real), mockado aqui pelo mesmo motivo do
+// drafter.test.ts (evita a cadeia de import derrubar o teste).
+vi.mock("../costs/usage-repository", () => ({ recordProviderUsage: vi.fn().mockResolvedValue(undefined) }));
 
 import { newsFetcherNode } from "./news-fetcher";
+import type { AgentState } from "../state";
+
+const baseState = { runId: "run-1" } as AgentState;
 
 const articles = [
   { title: "Notícia A", description: "Desc A", url: "https://exemplo.com/a" },
@@ -22,9 +30,9 @@ beforeEach(() => {
 describe("newsFetcherNode — candidateQueue (Fase 6)", () => {
   it("monta candidateQueue com as demais notícias, excluindo a escolhida", async () => {
     getMock.mockResolvedValue({ data: { totalArticles: 3, articles } });
-    invokeMock.mockResolvedValue({ index: 1, reason: "mais aderente" });
+    invokeMock.mockResolvedValue({ raw: {}, parsed: { index: 1, reason: "mais aderente" } });
 
-    const result = await newsFetcherNode();
+    const result = await newsFetcherNode(baseState);
 
     expect(result.sourceUrl).toBe("https://exemplo.com/b");
     expect(result.candidateTitle).toBe("Notícia B");
@@ -37,7 +45,7 @@ describe("newsFetcherNode — candidateQueue (Fase 6)", () => {
   it("candidateQueue vazia quando não há artigos", async () => {
     getMock.mockResolvedValue({ data: { totalArticles: 0, articles: [] } });
 
-    const result = await newsFetcherNode();
+    const result = await newsFetcherNode(baseState);
 
     expect(result.sourceUrl).toBeUndefined();
     expect(result.candidateQueue ?? []).toEqual([]);

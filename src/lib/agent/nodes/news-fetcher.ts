@@ -1,7 +1,9 @@
 import axios from "axios";
 import { z } from "zod";
 import { llm } from "../llm";
-import type { AgentStateUpdate } from "../state";
+import { invokeWithUsageTelemetry } from "../costs/record-llm-usage";
+import { recordProviderUsage } from "../costs/usage-repository";
+import type { AgentState, AgentStateUpdate } from "../state";
 
 interface GNewsArticle {
   title: string;
@@ -22,12 +24,19 @@ const PickSchema = z.object({
 // GNews.io devolve a URL direta do artigo (diferente do RSS do Google News,
 // que devolvia um link de redirecionamento resolvido via JS no navegador —
 // isso quebrava o ContentExtractor, que so faz fetch HTTP simples).
-async function searchGNews(): Promise<GNewsArticle[]> {
+//
+// Fase 7 (Secao 9) — instrumenta a chamada real ao GNews: status, latency,
+// quantidade de resultados, quota/rate-limit headers quando presentes,
+// erro/timeout. GNews nao documenta custo monetario por requisicao para
+// esta conta (plano nao expoe billing via API) — cost_status="unavailable"
+// sempre, nunca inventado (Secao 9/49).
+async function searchGNews(runId: string | undefined): Promise<GNewsArticle[]> {
   const apiKey = process.env.GNEWS_API_KEY;
   if (!apiKey) return [];
 
+  const startedAt = new Date().toISOString();
   try {
-    const { data } = await axios.get<GNewsSearchResponse>("https://gnews.io/api/v4/search", {
+    const response = await axios.get<GNewsSearchResponse>("https://gnews.io/api/v4/search", {
       params: {
         q: '("indústria" OR "manufatura" OR "fábrica" OR "indústria 4.0" OR "gestão industrial")',
         lang: "pt",
@@ -37,8 +46,44 @@ async function searchGNews(): Promise<GNewsArticle[]> {
       },
       timeout: 10_000,
     });
-    return data.articles ?? [];
-  } catch {
+    const finishedAt = new Date().toISOString();
+    const quotaHeaders: Record<string, unknown> = {};
+    const headers = response.headers ?? {};
+    for (const key of ["x-ratelimit-limit", "x-ratelimit-remaining", "x-ratelimit-reset"]) {
+      if (headers[key] !== undefined) quotaHeaders[key] = headers[key];
+    }
+    await recordProviderUsage({
+      runId,
+      provider: "gnews",
+      operation: "news_search",
+      startedAt,
+      finishedAt,
+      durationMs: Date.parse(finishedAt) - Date.parse(startedAt),
+      usage: {
+        status: response.status,
+        result_count: response.data.articles?.length ?? 0,
+        total_articles: response.data.totalArticles,
+        ...(Object.keys(quotaHeaders).length ? { quota_headers: quotaHeaders } : {}),
+      },
+      costStatus: "unavailable",
+      success: true,
+    }).catch(() => undefined);
+    return response.data.articles ?? [];
+  } catch (error) {
+    const finishedAt = new Date().toISOString();
+    const timedOut = axios.isAxiosError(error) && error.code === "ECONNABORTED";
+    await recordProviderUsage({
+      runId,
+      provider: "gnews",
+      operation: "news_search",
+      startedAt,
+      finishedAt,
+      durationMs: Date.parse(finishedAt) - Date.parse(startedAt),
+      costStatus: "unavailable",
+      success: false,
+      errorCode: timedOut ? "Timeout" : axios.isAxiosError(error) ? `HTTP_${error.response?.status ?? "network"}` : "UnknownError",
+      errorMessage: axios.isAxiosError(error) ? error.message.slice(0, 500) : "Erro nao normalizavel na busca GNews.",
+    }).catch(() => undefined);
     return [];
   }
 }
@@ -54,30 +99,33 @@ async function searchGNews(): Promise<GNewsArticle[]> {
  * o que faz routeAfterNewsFetch (workflow.ts) encerrar o grafo em END de
  * forma graciosa, sem derrubar a aplicacao.
  */
-export async function newsFetcherNode(): Promise<AgentStateUpdate> {
-  const articles = await searchGNews();
+export async function newsFetcherNode(state: AgentState): Promise<AgentStateUpdate> {
+  const articles = await searchGNews(state.runId);
 
   if (articles.length === 0) {
     return {
+      candidatesFound: 0,
       currentStep: "Nenhuma notícia relevante encontrada na GNews — encerrando execução.",
     };
   }
 
-  const picker = llm.withStructuredOutput(PickSchema);
-  const { index } = await picker.invoke([
-    {
-      role: "system",
-      content:
-        "Voce escolhe, entre noticias, a que tem maior aderencia ao nicho de manufatura e " +
-        "industria B2B brasileira. Responda apenas com o indice escolhido.",
-    },
-    {
-      role: "user",
-      content: articles
-        .map((article, i) => `${i}. ${article.title}${article.description ? ` — ${article.description}` : ""}`)
-        .join("\n"),
-    },
-  ]);
+  const picker = llm.withStructuredOutput(PickSchema, { includeRaw: true });
+  const { index } = await invokeWithUsageTelemetry({ runId: state.runId, operation: "news_pick", modelRequested: "gpt-4o" }, () =>
+    picker.invoke([
+      {
+        role: "system",
+        content:
+          "Voce escolhe, entre noticias, a que tem maior aderencia ao nicho de manufatura e " +
+          "industria B2B brasileira. Responda apenas com o indice escolhido.",
+      },
+      {
+        role: "user",
+        content: articles
+          .map((article, i) => `${i}. ${article.title}${article.description ? ` — ${article.description}` : ""}`)
+          .join("\n"),
+      },
+    ]),
+  );
 
   const chosenIndex = articles[index] ? index : 0;
   const chosen = articles[chosenIndex];
@@ -93,6 +141,7 @@ export async function newsFetcherNode(): Promise<AgentStateUpdate> {
     sourceUrl: chosen.url,
     candidateTitle: chosen.title,
     candidateQueue,
+    candidatesFound: articles.length,
     currentStep: `Pauta selecionada: "${chosen.title}"`,
   };
 }

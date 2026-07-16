@@ -3,7 +3,12 @@ import type { CostStatus } from "./calculate-cost";
 
 export type UsageProvider = "openai" | "gnews" | "replicate" | "pexels" | "supabase";
 export type UsageOperation =
+  // news_search: chamada HTTP real ao GNews (provider "gnews"), sem LLM.
   | "news_search"
+  // news_pick: chamada LLM (provider "openai") que escolhe a candidata
+  // mais aderente entre os resultados do GNews — operacao distinta de
+  // news_search porque e outro provider e outro tipo de custo.
+  | "news_pick"
   | "draft_generation"
   | "internal_audit"
   | "semantic_dedupe"
@@ -17,6 +22,7 @@ export interface RecordUsageInput {
   provider: UsageProvider;
   operation: UsageOperation;
   model?: string;
+  modelReturned?: string;
   requestId?: string;
   startedAt: string;
   finishedAt?: string;
@@ -26,6 +32,12 @@ export interface RecordUsageInput {
   unitCost?: number;
   estimatedCost?: number;
   costStatus: CostStatus;
+  finishReason?: string;
+  retryCount?: number;
+  attemptNumber?: number;
+  success?: boolean;
+  errorCode?: string;
+  errorMessage?: string;
   publishedPostId?: string;
 }
 
@@ -40,6 +52,7 @@ export async function recordProviderUsage(input: RecordUsageInput): Promise<void
     provider: input.provider,
     operation: input.operation,
     model: input.model ?? null,
+    model_returned: input.modelReturned ?? null,
     request_id: input.requestId ?? null,
     started_at: input.startedAt,
     finished_at: input.finishedAt ?? null,
@@ -49,6 +62,12 @@ export async function recordProviderUsage(input: RecordUsageInput): Promise<void
     unit_cost: input.unitCost ?? null,
     estimated_cost: input.estimatedCost ?? null,
     cost_status: input.costStatus,
+    finish_reason: input.finishReason ?? null,
+    retry_count: input.retryCount ?? null,
+    attempt_number: input.attemptNumber ?? null,
+    success: input.success ?? true,
+    error_code: input.errorCode ?? null,
+    error_message: input.errorMessage ?? null,
     published_post_id: input.publishedPostId ?? null,
   });
   if (error) throw new Error(error.message);
@@ -60,8 +79,15 @@ export interface UsageRow {
   provider: UsageProvider;
   operation: UsageOperation;
   model: string | undefined;
+  modelReturned?: string | undefined;
   estimatedCost: number | undefined;
   costStatus: CostStatus;
+  durationMs?: number | undefined;
+  finishReason?: string | undefined;
+  attemptNumber?: number | undefined;
+  success: boolean;
+  errorCode?: string | undefined;
+  errorMessage?: string | undefined;
   publishedPostId: string | undefined;
   createdAt: string;
 }
@@ -72,8 +98,15 @@ function fromRow(row: {
   provider: UsageProvider;
   operation: UsageOperation;
   model: string | null;
+  model_returned: string | null;
   estimated_cost: number | null;
   cost_status: CostStatus;
+  duration_ms: number | null;
+  finish_reason: string | null;
+  attempt_number: number | null;
+  success: boolean;
+  error_code: string | null;
+  error_message: string | null;
   published_post_id: string | null;
   created_at: string;
 }): UsageRow {
@@ -83,8 +116,15 @@ function fromRow(row: {
     provider: row.provider,
     operation: row.operation,
     model: row.model ?? undefined,
+    modelReturned: row.model_returned ?? undefined,
     estimatedCost: row.estimated_cost ?? undefined,
     costStatus: row.cost_status,
+    durationMs: row.duration_ms ?? undefined,
+    finishReason: row.finish_reason ?? undefined,
+    attemptNumber: row.attempt_number ?? undefined,
+    success: row.success,
+    errorCode: row.error_code ?? undefined,
+    errorMessage: row.error_message ?? undefined,
     publishedPostId: row.published_post_id ?? undefined,
     createdAt: row.created_at,
   };

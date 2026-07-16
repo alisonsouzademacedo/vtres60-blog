@@ -1,6 +1,21 @@
 import { operationsRepository } from "@/services/operations";
 import type { AgentState, AgentStateUpdate } from "../state";
 
+// Fase 7 (Secao 18/20) — NextCandidate e o UNICO no alcancado depois de
+// exatamente 4 pontos de rejeicao possiveis (ver workflow.ts:
+// ExactDedupeGate/NewsworthinessGate/SemanticDedupeGate/ImageProcessor,
+// as unicas arestas condicionais que apontam para "NextCandidate"), entao
+// o motivo da rejeicao e sempre deriva­vel do estado atual sem
+// ambiguidade — mesma logica de branches usada em agent-run-outcome.ts,
+// mas aqui e por-candidata, nao pelo run inteiro.
+function rejectionReasonFrom(state: AgentState): string {
+  if (state.dedupeStatus === "exact_duplicate") return "exact_duplicate";
+  if (state.newsworthinessReason !== undefined && !state.isNewsworthy) return "not_newsworthy";
+  if (state.dedupeStatus === "same_event_no_material_update") return "same_event_no_material_update";
+  if (state.imageResult && state.imageResult.status !== "success") return "image_pipeline_failed";
+  return "unknown";
+}
+
 /**
  * NextCandidate — roda quando ExactDedupeGate, NewsworthinessGate,
  * SemanticDedupeGate ou ImageProcessor rejeitam a candidata atual NUMA
@@ -18,6 +33,13 @@ import type { AgentState, AgentStateUpdate } from "../state";
 export async function nextCandidateNode(state: AgentState): Promise<AgentStateUpdate> {
   const [next, ...rest] = state.candidateQueue;
 
+  // Registra a candidata que acabou de ser rejeitada ANTES de resetar
+  // qualquer campo do state — candidateHistory nunca e resetado (ao
+  // contrario dos campos abaixo), entao acumula do inicio ao fim do run.
+  const candidateHistory = state.sourceUrl
+    ? [...state.candidateHistory, { url: state.sourceUrl, title: state.candidateTitle, reason: rejectionReasonFrom(state) }]
+    : state.candidateHistory;
+
   if (!next) {
     await operationsRepository.log(
       "proxima_candidata",
@@ -26,6 +48,7 @@ export async function nextCandidateNode(state: AgentState): Promise<AgentStateUp
     );
     return {
       candidateExhausted: true,
+      candidateHistory,
       currentStep: "Nenhuma candidata restante — encerrando execução.",
     };
   }
@@ -41,6 +64,7 @@ export async function nextCandidateNode(state: AgentState): Promise<AgentStateUp
     candidateTitle: next.title,
     candidateQueue: rest,
     candidateExhausted: false,
+    candidateHistory,
     candidatesTried: state.candidatesTried + 1,
     currentStep: `Tentando próxima candidata: "${next.title}"`,
     sourceText: "",

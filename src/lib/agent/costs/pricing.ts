@@ -2,15 +2,35 @@
 // provider/modelo. Nenhum valor de preco deve existir solto em outro
 // arquivo do agente; qualquer calculo de custo importa daqui.
 //
-// AVISO IMPORTANTE (honestidade obrigatoria — ver Secao 29/63 do prompt da
-// Fase 6): WebSearch e WebFetch estavam BLOQUEADOS nesta sessao (politica
-// de permissao do ambiente, nao falha tecnica) — nao foi possivel
-// reverificar estes precos ao vivo na documentacao oficial dos providers
-// HOJE. Os valores abaixo vem do conhecimento de treinamento do modelo,
-// nao de uma consulta live. `verified: false` e `lastVerifiedAt: undefined`
-// refletem isso deliberadamente. NÃO confie nestes valores para decisao
-// financeira real sem antes conferir source_url manualmente e atualizar
-// verified/lastVerifiedAt.
+// Fase 7 (Secao 13) — tentativa real de reverificacao em 2026-07-15.
+// WebFetch permanece bloqueado por politica do ambiente (mesma restricao
+// da Fase 6); como alternativa TECNICA equivalente (paginas oficiais via
+// rede, nunca busca/memoria), tentou-se `curl` direto nas paginas oficiais
+// de cada provider:
+//   - openai.com/api/pricing/  -> HTTP 403 (protecao anti-bot). NAO
+//     reverificado — permanece verified:false.
+//   - replicate.com/black-forest-labs/flux-schnell -> HTTP 200. A propria
+//     pagina expoe, em JSON estruturado embutido, "$3 per thousand output
+//     images" (metric "image_output_count") — confirma $0.003/imagem.
+//     verified:true.
+//   - gnews.io -> HTTP 200, mas a tabela de planos e renderizada via JS no
+//     cliente; o HTML estatico so confirma a EXISTENCIA de um tier "Free"
+//     por cota (sem cobranca monetaria por request), nao os numeros exatos
+//     da tabela. O fato que importa para cost_status (gratuito dentro de
+//     cota, nao billing por chamada) fica confirmado; o valor numerico
+//     "0" permanece verified:false por rigor.
+//   - pexels.com/api/documentation/ -> HTTP 403 (protecao anti-bot). NAO
+//     reverificado — permanece verified:false.
+//   - supabase.com/pricing -> HTTP 200. Confirma armazenamento de Storage:
+//     1 GB incluso no plano Free, 100 GB inclusos no Pro, entao $0.0213/GB
+//     adicional — ver SUPABASE_STORAGE_REFERENCE abaixo (isso e preco de
+//     INFRAESTRUTURA/PLANO, nao "por requisicao"; nunca usado para
+//     calcular um custo por upload individual — Secao 12).
+//
+// Para os valores que continuam verified:false, o numero exibido ainda
+// vem do conhecimento de treinamento do modelo (nao de uma consulta live
+// bem-sucedida) — NAO confiar para decisao financeira real sem conferir
+// sourceUrl manualmente.
 export interface ModelPrice {
   provider: "openai" | "replicate" | "gnews" | "pexels";
   model: string;
@@ -70,8 +90,8 @@ export const MODEL_PRICES: ModelPrice[] = [
     currency: "USD",
     effectiveFrom: "2024-01-01",
     sourceUrl: "https://replicate.com/black-forest-labs/flux-schnell",
-    verified: false,
-    lastVerifiedAt: undefined,
+    verified: true,
+    lastVerifiedAt: "2026-07-15",
   },
   {
     // GNews e Pexels: gratuitos dentro da cota do plano usado por este
@@ -109,3 +129,23 @@ export function findModelPrice(
 ): ModelPrice | undefined {
   return MODEL_PRICES.find((entry) => entry.provider === provider && entry.model === model && entry.unit === unit);
 }
+
+// Fase 7 (Secao 12/13) — preco de INFRAESTRUTURA/PLANO do Supabase
+// Storage, confirmado ao vivo em supabase.com/pricing (2026-07-15):
+// 1 GB incluso no plano Free, 100 GB inclusos no Pro, entao $0.0213/GB
+// adicional. Deliberadamente FORA de MODEL_PRICES/ModelPrice: nao e um
+// preco "por chamada" (upload) — e cobranca por armazenamento TOTAL
+// acumulado no plano, so calculavel olhando o uso agregado da conta, nao
+// uma unica requisicao. Existe aqui apenas como referencia informativa
+// para o painel admin (Secao 12: separar custo calculavel por requisicao
+// de custo de infraestrutura nao atribuivel diretamente) — nunca usado
+// para computar `estimated_cost` de uma linha de agent_provider_usage.
+export const SUPABASE_STORAGE_PLAN_REFERENCE = {
+  currency: "USD" as const,
+  freeTierIncludedGb: 1,
+  proTierIncludedGb: 100,
+  proTierOverageUsdPerGb: 0.0213,
+  sourceUrl: "https://supabase.com/pricing",
+  verified: true,
+  lastVerifiedAt: "2026-07-15",
+};

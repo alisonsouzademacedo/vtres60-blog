@@ -89,6 +89,8 @@ function baseState(overrides: Partial<AgentState> = {}): AgentState {
     candidateQueue: [],
     candidateExhausted: false,
     candidatesTried: 1,
+    candidatesFound: 1,
+    candidateHistory: [],
     candidateTitle: undefined,
     runId: undefined,
     ...overrides,

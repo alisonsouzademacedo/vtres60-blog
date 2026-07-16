@@ -146,7 +146,14 @@ export async function publisherNode(state: AgentState): Promise<AgentStateUpdate
     // o Publisher so persiste, nunca recalcula origin/hash/width/height/credit.
     featuredImage: imageResult.finalImageUrl,
     imageCaption: "",
-    imageAlt: titulo,
+    // Fase 7 (Secao 29) — as 3 origens de imagem (source_og, generated_replicate,
+    // pexels) sao sempre meramente ilustrativas do fato central (nunca
+    // comunicam informacao adicional que o titulo/corpo ja nao digam), e o
+    // titulo fica sempre imediatamente adjacente na pagina (header do
+    // artigo). alt="" e a escolha correta aqui (WCAG: imagem decorativa
+    // com texto equivalente ja adjacente) — repetir o titulo como alt era
+    // redundante para leitores de tela, nao um bug de dado ausente.
+    imageAlt: "",
     imageSourceUrl: imageResult.sourceUrl,
     imageCredit: imageResult.credit,
     imageOrigin: imageResult.origin,

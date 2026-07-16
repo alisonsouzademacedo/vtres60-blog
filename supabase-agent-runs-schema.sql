@@ -51,6 +51,11 @@ create table if not exists public.agent_runs (
   candidate_title text,
   candidate_url text,
   candidates_tried integer not null default 0,
+  -- candidates_found: total retornado pelo GNews nesta execucao (antes de
+  -- qualquer rejeicao) — distinto de candidates_tried (quantas foram
+  -- processadas ate o motivo terminal). 0 para URL explicita via
+  -- admin/fila (Fase 7, Secao 18).
+  candidates_found integer not null default 0,
   source_name text,
   exact_dedupe_status text,
   newsworthiness_status text,
@@ -65,11 +70,23 @@ create table if not exists public.agent_runs (
   -- Secao 28/38 do prompt da Fase 6) — so mensagem/codigo de erro por
   -- provider quando houver falha.
   provider_errors jsonb,
+  -- error_code/error_summary (Fase 7, Secao 18): erro NORMALIZADO e
+  -- SANITIZADO do nivel da EXECUCAO (quando terminal_reason='operational_error'
+  -- ou status='failed') — distinto de provider_errors (granular, por
+  -- provider). Nunca stack trace completo, nunca corpo de resposta bruto.
+  error_code text,
+  error_summary text,
+  -- candidate_history (Fase 7, Secao 18/20): array jsonb [{url,title,reason}]
+  -- com o motivo de rejeicao de CADA candidata tentada nesta execucao (nao
+  -- so a ultima) — permite o painel Operacao do Agente mostrar "motivo de
+  -- rejeição de cada candidata" sem uma tabela filha separada.
+  candidate_history jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now()
 );
 
 create index if not exists agent_runs_created_at_idx on public.agent_runs (created_at desc);
 create index if not exists agent_runs_status_idx on public.agent_runs (status);
+create index if not exists agent_runs_published_post_id_idx on public.agent_runs (published_post_id);
 
 -- RLS deny-all, mesma logica de agent_queue/tabelas editoriais: toda a
 -- aplicacao acessa via supabaseAdmin (service_role), que bypassa RLS. O

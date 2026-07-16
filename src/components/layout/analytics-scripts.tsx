@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { SeoSettings } from "@/types/admin";
 import { CONSENT_CHANGED_EVENT, readStoredConsent, type ConsentDecision } from "@/lib/consent";
+import { isAdminRoute, sanitizePixelId, shouldLoadMetaPixel } from "./meta-pixel-gate";
 
 declare global {
   interface Window {
@@ -11,7 +12,7 @@ declare global {
   }
 }
 
-const safeId = (value: string) => (/^[A-Za-z0-9_-]+$/.test(value) ? value : "");
+const safeId = sanitizePixelId;
 
 /**
  * Fase 6 (Secao 18-22) — reescrita da injecao de tags de terceiros:
@@ -27,6 +28,10 @@ const safeId = (value: string) => (/^[A-Za-z0-9_-]+$/.test(value) ? value : "");
  * 3. Meta Pixel e LinkedIn Insight so carregam depois de consentimento de
  *    marketing (Consent Mode v2 cobre Google; estes dois nao sao Google,
  *    entao dependem do CustomEvent proprio disparado por ConsentBanner).
+ * 3b. (Fase 7) `seo.metaPixelManagedByGtm` — quando true, o Pixel NAO e
+ *    carregado por este componente (fica a cargo do proprio GTM). Existe
+ *    para permitir migrar a gestao do Pixel para dentro do GTM no futuro
+ *    sem duplicar PageView por um periodo (ver hint no admin/SEO).
  * 4. Meta Pixel: o bootstrap inline ja dispara o primeiro PageView; o
  *    efeito abaixo cobre navegacoes client-side subsequentes do App
  *    Router (sem isso, paginas vistas via <Link> nunca seriam contadas —
@@ -53,12 +58,18 @@ export function AnalyticsScripts({ seo }: { seo: SeoSettings }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  if (pathname?.startsWith("/admin")) return null;
+  if (isAdminRoute(pathname)) return null;
 
   const gtm = safeId(seo.googleTagManagerId);
   const ga = gtm ? "" : safeId(seo.googleAnalyticsId);
   const ads = gtm ? "" : safeId(seo.googleAdsId);
-  const pixel = safeId(seo.metaPixelId);
+  const pixelAllowed = shouldLoadMetaPixel({
+    metaPixelId: seo.metaPixelId,
+    metaPixelManagedByGtm: seo.metaPixelManagedByGtm,
+    marketingConsent,
+    pathname,
+  });
+  const pixel = pixelAllowed ? safeId(seo.metaPixelId) : "";
   const linkedin = safeId(seo.linkedinPartnerId);
   const gtagBootstrapId = ga || ads;
 
@@ -79,7 +90,7 @@ export function AnalyticsScripts({ seo }: { seo: SeoSettings }) {
         </>
       )}
 
-      {pixel && marketingConsent && (
+      {pixel && (
         <Script
           id="meta-pixel"
           strategy="afterInteractive"

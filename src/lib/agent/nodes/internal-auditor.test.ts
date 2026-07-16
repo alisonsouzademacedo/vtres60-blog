@@ -1,8 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const invokeMock = vi.fn();
+// Fase 7 — internalAuditorNode agora chama .invoke() com includeRaw:true
+// (formato {raw,parsed}); o wrapper abaixo deixa os testes existentes
+// controlarem so o `parsed` via invokeMock.mockResolvedValue(...), como
+// antes.
 vi.mock("../llm", () => ({
-  llm: { withStructuredOutput: () => ({ invoke: invokeMock }) },
+  llm: { withStructuredOutput: () => ({ invoke: async (...args: unknown[]) => ({ raw: {}, parsed: await invokeMock(...args) }) }) },
 }));
 
 const listCategoriesMock = vi.fn();
@@ -11,6 +15,7 @@ vi.mock("@/services/editorial", () => ({
     listCategories: (...args: unknown[]) => listCategoriesMock(...args),
   },
 }));
+vi.mock("../costs/usage-repository", () => ({ recordProviderUsage: vi.fn().mockResolvedValue(undefined) }));
 
 import type { AgentState } from "../state";
 import { internalAuditorNode } from "./internal-auditor";
@@ -62,6 +67,8 @@ function baseState(overrides: Partial<AgentState> = {}): AgentState {
     candidateQueue: [],
     candidateExhausted: false,
     candidatesTried: 1,
+    candidatesFound: 1,
+    candidateHistory: [],
     candidateTitle: undefined,
     runId: undefined,
     ...overrides,
