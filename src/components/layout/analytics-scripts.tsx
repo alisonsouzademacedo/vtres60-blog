@@ -1,6 +1,6 @@
 "use client";
 import Script from "next/script";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { SeoSettings } from "@/types/admin";
 import { CONSENT_CHANGED_EVENT, readStoredConsent, type ConsentDecision } from "@/lib/consent";
@@ -40,7 +40,6 @@ const safeId = sanitizePixelId;
 export function AnalyticsScripts({ seo }: { seo: SeoSettings }) {
   const pathname = usePathname();
   const [marketingConsent, setMarketingConsent] = useState(false);
-  const pixelReady = useRef(false);
 
   useEffect(() => {
     setMarketingConsent(readStoredConsent()?.marketing ?? false);
@@ -52,9 +51,17 @@ export function AnalyticsScripts({ seo }: { seo: SeoSettings }) {
     return () => window.removeEventListener(CONSENT_CHANGED_EVENT, onConsentChanged);
   }, []);
 
+  // Fase 7 (Secao 44 fix) — next/script nunca dispara onLoad para scripts
+  // INLINE (sem src): o bootstrap do Pixel cria o <script src=fbevents.js>
+  // sozinho via DOM, fora do controle do next/script, entao o proprio
+  // onLoad do componente Script nunca chamava de volta (ficava travado em
+  // "nao pronto" para sempre, mesmo com o Pixel de fato ativo) — nenhum
+  // PageView de navegacao SPA disparava depois do primeiro. Checar
+  // window.fbq diretamente reflete o estado real em vez de um callback que
+  // nunca chega.
   useEffect(() => {
-    if (!marketingConsent || !pixelReady.current) return;
-    window.fbq?.("track", "PageView");
+    if (!marketingConsent || typeof window.fbq !== "function") return;
+    window.fbq("track", "PageView");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
@@ -91,13 +98,7 @@ export function AnalyticsScripts({ seo }: { seo: SeoSettings }) {
       )}
 
       {pixel && (
-        <Script
-          id="meta-pixel"
-          strategy="afterInteractive"
-          onLoad={() => {
-            pixelReady.current = true;
-          }}
-        >
+        <Script id="meta-pixel" strategy="afterInteractive">
           {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${pixel}');fbq('track','PageView');`}
         </Script>
       )}
