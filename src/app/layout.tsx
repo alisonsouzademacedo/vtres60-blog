@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { CSSProperties } from "react";
 import "./globals.css";
+import { withBasePath } from "@/lib/paths";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { AnalyticsScripts } from "@/components/layout/analytics-scripts";
@@ -10,7 +11,7 @@ import { absoluteUrl } from "@/lib/seo";
 import { configRepository } from "@/services/config";
 import { editorialRepository } from "@/services/editorial";
 
-export async function generateMetadata():Promise<Metadata>{const[settings,seo,branding]=await Promise.all([configRepository.getSettings(),configRepository.getSeo(),configRepository.getBranding()]);return{metadataBase:new URL(seo.canonicalBaseUrl),title:{default:seo.defaultTitle,template:`%s | ${settings.portalName}`},description:seo.defaultDescription,keywords:seo.defaultKeywords,alternates:{canonical:"/"},icons:{icon:branding.favicon},openGraph:{type:"website",locale:"pt_BR",siteName:settings.portalName,title:seo.defaultTitle,description:seo.defaultDescription,images:[seo.defaultOgImage||branding.defaultShareImage]},twitter:{card:"summary_large_image",title:seo.defaultTitle,description:seo.defaultDescription,images:[seo.defaultOgImage||branding.defaultShareImage]},robots:seo.robotsEnabled?{index:true,follow:true}:{index:false,follow:false},...(seo.googleSiteVerification?{verification:{google:seo.googleSiteVerification}}:{})}}
+export async function generateMetadata():Promise<Metadata>{const[settings,seo,branding]=await Promise.all([configRepository.getSettings(),configRepository.getSeo(),configRepository.getBranding()]);return{metadataBase:new URL(seo.canonicalBaseUrl),title:{default:seo.defaultTitle,template:`%s | ${settings.portalName}`},description:seo.defaultDescription,keywords:seo.defaultKeywords,alternates:{canonical:"/"},icons:{icon:withBasePath(branding.favicon)},openGraph:{type:"website",locale:"pt_BR",siteName:settings.portalName,title:seo.defaultTitle,description:seo.defaultDescription,images:[seo.defaultOgImage||branding.defaultShareImage]},twitter:{card:"summary_large_image",title:seo.defaultTitle,description:seo.defaultDescription,images:[seo.defaultOgImage||branding.defaultShareImage]},robots:seo.robotsEnabled?{index:true,follow:true}:{index:false,follow:false},...(seo.googleSiteVerification?{verification:{google:seo.googleSiteVerification}}:{})}}
 
 // Fase 6 — Next.js 15 exige viewport/themeColor como export separado de
 // metadata (aviso de build caso fiquem dentro do objeto Metadata).
