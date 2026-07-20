@@ -76,7 +76,7 @@ create table if not exists public.agent_provider_usage (
   -- resposta bruto, nunca header, nunca chave de API) — Secao 7/28.
   error_code text,
   error_message text,
-  published_post_id uuid references public.posts(id) on delete set null,
+  published_post_id text references public.posts(id) on delete set null,
   created_at timestamptz not null default now()
 );
 

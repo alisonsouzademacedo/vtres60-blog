@@ -65,7 +65,7 @@ create table if not exists public.agent_runs (
   material_update_reason text,
   image_tier text,
   image_status text,
-  published_post_id uuid references public.posts(id) on delete set null,
+  published_post_id text references public.posts(id) on delete set null,
   -- provider_errors: jsonb, NUNCA prompt completo nem corpo da fonte (ver
   -- Secao 28/38 do prompt da Fase 6) — so mensagem/codigo de erro por
   -- provider quando houver falha.
