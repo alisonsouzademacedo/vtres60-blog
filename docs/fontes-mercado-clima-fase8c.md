@@ -10,7 +10,8 @@ Para cada fonte: protocolo de zero-dedução (spec seção 1) seguido item a ite
 |---|---|---|---|---|
 | Open-Meteo | `open-meteo.com/en/licence` (dados CC-BY 4.0) + `/en/pricing` | Não (tier grátis) | **Bloqueado no tier grátis** — página de pricing mostra "Commercial use: ❌" explicitamente; só planos pagos (Standard+) concedem licença comercial | Rejeitada nesta fase (sem assinatura paga contratada) |
 | INMET (`apiprevmet3.inmet.gov.br`) | Órgão federal (Ministério da Agricultura e Pecuária) — sem página de termos dedicada encontrada (`/dadosabertos` retornou 404), mas sujeito à Política de Dados Abertos do Executivo Federal (Decreto 8.777/2016), mesma categoria já usada com sucesso para BCB/PTAX nesta fase | Não | Dado público federal, sem restrição de uso encontrada | **Escolhida** |
-| INMET — estação automática (tempo real) | Não pesquisado nesta fase (fora do orçamento de tempo) | — | — | Não avaliada — ver "bloqueadores" abaixo |
+| INMET — catálogo de estações automáticas (`apitempo.inmet.gov.br/estacoes/T`) | Sem documentação formal encontrada, mas mesmo domínio/órgão do endpoint de previsão já em uso | Não | Dado público, usado para geocodificação, não para leitura de valor climático em si | **Escolhida (fechamento da Fase 8C)** — ver seção "Geolocalização" abaixo |
+| INMET — leitura de estação em tempo real (`apitempo.inmet.gov.br/estacao/{datas}/{codigo}`) | Rota real (retorna HTTP 204 em vez de 404), mas não retornou dados nas datas testadas | Não | Não confirmado | Não implementada — retornou vazio (204) para as datas testadas; investigação encerrada por orçamento de tempo, ver "bloqueadores" |
 
 ### Fonte escolhida: INMET
 

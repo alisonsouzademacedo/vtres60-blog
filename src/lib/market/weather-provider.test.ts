@@ -3,15 +3,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const getMock = vi.fn();
 vi.mock("axios", () => ({ default: { get: (...a: unknown[]) => getMock(...a) } }));
 
-import {
-  DEFAULT_CITY,
-  _resetWeatherCacheForTests,
-  fetchWeather,
-  getCachedWeather,
-  nearestReferenceCity,
-  REFERENCE_CITIES,
-  roundCoordinate,
-} from "./weather-provider";
+import { DEFAULT_CITY, _resetWeatherCacheForTests, fetchWeather, getCachedWeather, roundCoordinate } from "./weather-provider";
+
+// Fechamento Fase 8C: REFERENCE_CITIES/nearestReferenceCity (mapeamento
+// por capital) foi removido de weather-provider.ts — substituído pela
+// resolução de estação real mais próxima em inmet-stations.ts (ver
+// inmet-stations.test.ts para a cobertura correspondente). Esta
+// constante local só serve para os testes de "outra cidade" abaixo, que
+// testam fetchWeather/getCachedWeather com uma cidade qualquer, não a
+// lógica de resolução de localização em si.
+const PORTO_ALEGRE = { name: "Porto Alegre", state: "RS", ibgeCode: "4314902", latitude: -30.0346, longitude: -51.2177 };
 
 beforeEach(() => {
   getMock.mockReset();
@@ -70,12 +71,11 @@ describe("fetchWeather", () => {
     expect(snapshot.freshnessStatus).toBe("unavailable");
   });
 
-  it("outra cidade de referência (ex.: Porto Alegre): usa o código IBGE correto", async () => {
-    const poa = REFERENCE_CITIES.find((c) => c.name === "Porto Alegre")!;
-    getMock.mockResolvedValue(inmetResponse(poa.ibgeCode));
-    await fetchWeather(poa);
+  it("outra cidade (ex.: Porto Alegre): usa o código IBGE correto", async () => {
+    getMock.mockResolvedValue(inmetResponse(PORTO_ALEGRE.ibgeCode));
+    await fetchWeather(PORTO_ALEGRE);
     const [url] = getMock.mock.calls[0];
-    expect(url).toContain(poa.ibgeCode);
+    expect(url).toContain(PORTO_ALEGRE.ibgeCode);
   });
 });
 
@@ -91,10 +91,9 @@ describe("getCachedWeather", () => {
   });
 
   it("cidades diferentes têm cache independente", async () => {
-    const poa = REFERENCE_CITIES.find((c) => c.name === "Porto Alegre")!;
-    getMock.mockImplementation(async (url: string) => inmetResponse(url.includes(poa.ibgeCode) ? poa.ibgeCode : DEFAULT_CITY.ibgeCode));
+    getMock.mockImplementation(async (url: string) => inmetResponse(url.includes(PORTO_ALEGRE.ibgeCode) ? PORTO_ALEGRE.ibgeCode : DEFAULT_CITY.ibgeCode));
     await getCachedWeather(DEFAULT_CITY);
-    const result = await getCachedWeather(poa);
+    const result = await getCachedWeather(PORTO_ALEGRE);
     expect(result.cacheHit).toBe(false);
   });
 });
@@ -106,19 +105,7 @@ describe("roundCoordinate", () => {
   });
 });
 
-describe("nearestReferenceCity", () => {
-  it("encontra a capital mais próxima de uma coordenada real", () => {
-    // Proximo de Porto Alegre
-    const city = nearestReferenceCity(-30.03, -51.23);
-    expect(city.name).toBe("Porto Alegre");
-  });
-
-  it("volta para Santa Maria (padrão) quando nenhuma capital está a menos de 400km", () => {
-    // Meio do oceano Atlantico, longe de qualquer capital de referencia
-    const city = nearestReferenceCity(-25, -30);
-    expect(city).toEqual(DEFAULT_CITY);
-  });
-
+describe("DEFAULT_CITY", () => {
   it("permite voltar para Santa Maria mesmo após localização (padrão sempre disponível)", () => {
     expect(DEFAULT_CITY.name).toBe("Santa Maria");
     expect(DEFAULT_CITY.state).toBe("RS");

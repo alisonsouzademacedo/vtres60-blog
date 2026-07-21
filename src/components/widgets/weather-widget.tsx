@@ -96,6 +96,14 @@ export function WeatherWidget({ initial }: { initial: WeatherSnapshot }) {
           </footer>
         </>
       )}
+      {snapshot.stationName && snapshot.distanceKm != null && (
+        <p className={styles.weatherSource}>
+          Estação mais próxima: {snapshot.stationName} (~{snapshot.distanceKm} km da sua localização)
+        </p>
+      )}
+      {snapshot.locationFallback && (
+        <small className={styles.weatherHint}>Nenhuma estação próxima o suficiente foi encontrada — mostrando Santa Maria.</small>
+      )}
       <p className={styles.weatherSource}>
         {snapshot.sourceName} · previsão, não leitura ao vivo
       </p>

@@ -20,12 +20,12 @@ Detalhe completo em `docs/fontes-mercado-clima-fase8c.md`.
 8. Licença: dado público, sem chave, sem restrição de uso comercial encontrada.
 9. Chamada real: `GET /previsao/4316907` (Santa Maria/RS) confirmada — HTTP 200, JSON válido.
 10. Santa Maria: implementada como padrão (`DEFAULT_CITY`), Joinville removida.
-11. Geolocalização: opt-in por botão, nunca automática; coordenada arredondada; nunca enviada a analytics/Supabase; sempre permite voltar a Santa Maria.
+11. Geolocalização: opt-in por botão, nunca automática; coordenada arredondada; nunca enviada a analytics/Supabase; sempre permite voltar a Santa Maria. **Atualizado no fechamento desta fase**: substituído o mapeamento por "capital mais próxima" (27 pontos fixos) pela estação automática ativa real mais próxima (catálogo público do INMET, 477 estações), com resolução de código IBGE via API oficial do IBGE — ver `docs/fechamento-fase8c.md` para o detalhe completo.
 12. Cache: 10 minutos, em memória, por cidade.
 13. Estados: `delayed` (previsão real, não é leitura instantânea) e `unavailable` — nunca `live` (é previsão por período do dia, não estação em tempo real).
-14. Testes: 9 testes em `weather-provider.test.ts`.
+14. Testes: 9 testes em `weather-provider.test.ts` + 10 testes em `inmet-stations.test.ts` (fechamento da fase).
 
-**WEATHER_READY = true**, com a limitação documentada de que "usar minha localização" só cobre as 27 capitais estaduais como referência (não os 5.570 municípios), e que é previsão, não leitura de estação ao vivo.
+**WEATHER_READY = true**. Ver `docs/fechamento-fase8c.md` para `GEOLOCATION_FULLY_SUPPORTED=true` (cobertura real por estação, não mais limitada a 27 capitais).
 
 ## C. Moedas
 
@@ -104,9 +104,12 @@ Detalhe completo em `docs/validacao-eventos-fase8c.md`.
 
 ## Bloqueadores concretos para fases futuras
 
-1. **Validação UX/acessibilidade completa não executada** (Playwright/axe/Lighthouse desta fase específica) — a suíde existente continua passando (452 testes), mas os novos estados visuais (indisponível, carregando localização, permissão negada) não foram testados com navegador real nesta fase. Recomendado antes de expor a novos usuários em produção.
-2. **Editorial**: decisão sobre a Febrava (manter como candidato aguardando revisão, ou já anunciar a cobertura de setembro/2027) é do Pedro — nenhuma correção de copy/data foi feita silenciosamente.
-3. **Mercopar**: precisa de confirmação por outra via (a SPA não expõe conteúdo a scraping estático) antes de poder ser republicado.
-4. **Geolocalização de clima**: cobre só capitais estaduais; expandir para todos os municípios exigiria uma fonte de geocodificação reversa completa (ex.: API de localidades do IBGE), não pesquisada nesta fase.
-5. **Admin da Agenda**: falta validação server-side impedindo publicar evento sem fonte/verificação (hoje só há aviso visual no formulário).
-6. **Aço**: nenhuma fonte oficial gratuita encontrada — se isso for um requisito de negócio, precisa de pesquisa dedicada (provavelmente envolve um provider pago).
+**Nota**: os itens 1, 4 e 5 abaixo foram resolvidos na etapa de fechamento desta fase — ver `docs/fechamento-fase8c.md` para o detalhe completo (Playwright/axe/Lighthouse executados, geolocalização por estação real implementada, validação server-side da Agenda implementada). Mantidos aqui como registro histórico do estado no commit `d5eac31`.
+
+1. ~~Validação UX/acessibilidade completa não executada~~ — **feito no fechamento**: Playwright (120/120), axe (12/12, 1 P1 de contraste encontrado e corrigido), Lighthouse (100/100/100 acessibilidade/best-practices/SEO em home e /agenda, mobile e desktop).
+2. **Editorial**: decisão sobre a Febrava (manter como candidato aguardando revisão, ou já anunciar a cobertura de setembro/2027) é do Pedro — nenhuma correção de copy/data foi feita silenciosamente. **Ainda pendente.**
+3. **Mercopar**: precisa de confirmação por outra via (a SPA não expõe conteúdo a scraping estático) antes de poder ser republicado. **Ainda pendente.**
+4. ~~Geolocalização de clima cobre só capitais estaduais~~ — **feito no fechamento**: substituído por resolução de estação automática ativa real mais próxima (477 estações, catálogo público do INMET) + código IBGE via API oficial do IBGE. Bloqueador residual: leitura de estação em tempo real (não previsão) continua não confirmada.
+5. ~~Admin da Agenda sem validação server-side~~ — **feito no fechamento**: `validateEventPublication()` bloqueia publicação sem fonte/verificação em todas as rotas (POST/PATCH), 21 testes.
+6. **Aço**: nenhuma fonte oficial gratuita encontrada — se isso for um requisito de negócio, precisa de pesquisa dedicada (provavelmente envolve um provider pago). **Ainda pendente.**
+7. **Novo, encontrado no fechamento**: imagem de 1,87MB em `/agenda` (P2, pré-existente, não causada por esta fase) — ver `docs/fechamento-fase8c.md`.

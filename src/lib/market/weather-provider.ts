@@ -33,58 +33,27 @@ export interface CityReference {
   name: string;
   state: string;
   ibgeCode: string;
-  latitude: number;
-  longitude: number;
 }
 
 /** Padrao do widget: Santa Maria, RS (nunca Joinville — corrigido nesta fase). */
-export const DEFAULT_CITY: CityReference = { name: "Santa Maria", state: "RS", ibgeCode: "4316907", latitude: -29.6842, longitude: -53.8069 };
+export const DEFAULT_CITY: CityReference = { name: "Santa Maria", state: "RS", ibgeCode: "4316907" };
 
 /**
- * Capitais estaduais brasileiras (fatos publicos verificaveis: nome,
- * codigo IBGE do municipio, coordenadas da sede). Usadas apenas como
- * referencia de "cidade mais proxima" para a opcao "usar minha
- * localizacao" — nao e uma cobertura completa dos 5.570 municipios do
- * Brasil (fora do escopo desta fase; ver docs/fontes-mercado-clima-fase8c.md).
+ * Fechamento Fase 8C — REMOVIDO: a lista de 27 capitais como "referencia
+ * de cidade mais proxima" (REFERENCE_CITIES/nearestReferenceCity) foi
+ * substituida por src/lib/market/inmet-stations.ts, que resolve a
+ * ESTACAO AUTOMATICA ATIVA real mais proxima (catalogo publico do INMET,
+ * apitempo.inmet.gov.br/estacoes/T) e so entao converte para codigo IBGE
+ * via API oficial do IBGE. Motivo: mapear qualquer coordenada para uma
+ * de 27 capitais distantes ("Usar minha localizacao" mostrando Porto
+ * Alegre para alguem em Caxias do Sul, ~130km de distancia, sem nenhuma
+ * indicacao de aproximacao) e exatamente o que a auditoria de fechamento
+ * desta fase identificou como enganoso — e a nova spec proibe
+ * explicitamente "escolher uma capital arbitrariamente" como fallback.
+ * A funcao previa nunca chegou a rodar em producao (fase anterior nao
+ * fez deploy), entao remover aqui nao e uma regressao de comportamento
+ * ao vivo, so a correcao antes do primeiro uso real.
  */
-export const REFERENCE_CITIES: CityReference[] = [
-  { name: "Porto Alegre", state: "RS", ibgeCode: "4314902", latitude: -30.0346, longitude: -51.2177 },
-  { name: "Florianópolis", state: "SC", ibgeCode: "4205407", latitude: -27.5954, longitude: -48.548 },
-  { name: "Curitiba", state: "PR", ibgeCode: "4106902", latitude: -25.4284, longitude: -49.2733 },
-  { name: "São Paulo", state: "SP", ibgeCode: "3550308", latitude: -23.5505, longitude: -46.6333 },
-  { name: "Rio de Janeiro", state: "RJ", ibgeCode: "3304557", latitude: -22.9068, longitude: -43.1729 },
-  { name: "Belo Horizonte", state: "MG", ibgeCode: "3106200", latitude: -19.9167, longitude: -43.9345 },
-  { name: "Vitória", state: "ES", ibgeCode: "3205309", latitude: -20.3155, longitude: -40.3128 },
-  { name: "Brasília", state: "DF", ibgeCode: "5300108", latitude: -15.7942, longitude: -47.8825 },
-  { name: "Goiânia", state: "GO", ibgeCode: "5208707", latitude: -16.6864, longitude: -49.2643 },
-  { name: "Campo Grande", state: "MS", ibgeCode: "5002704", latitude: -20.4697, longitude: -54.6201 },
-  { name: "Cuiabá", state: "MT", ibgeCode: "5103403", latitude: -15.601, longitude: -56.0974 },
-  { name: "Salvador", state: "BA", ibgeCode: "2927408", latitude: -12.9714, longitude: -38.5014 },
-  { name: "Recife", state: "PE", ibgeCode: "2611606", latitude: -8.0476, longitude: -34.877 },
-  { name: "Fortaleza", state: "CE", ibgeCode: "2304400", latitude: -3.7172, longitude: -38.5433 },
-  { name: "Belém", state: "PA", ibgeCode: "1501402", latitude: -1.4558, longitude: -48.4902 },
-  { name: "Manaus", state: "AM", ibgeCode: "1302603", latitude: -3.119, longitude: -60.0217 },
-  { name: "Natal", state: "RN", ibgeCode: "2408102", latitude: -5.7945, longitude: -35.211 },
-  { name: "João Pessoa", state: "PB", ibgeCode: "2507507", latitude: -7.1195, longitude: -34.8450 },
-  { name: "Maceió", state: "AL", ibgeCode: "2704302", latitude: -9.6498, longitude: -35.7089 },
-  { name: "Aracaju", state: "SE", ibgeCode: "2800308", latitude: -10.9472, longitude: -37.0731 },
-  { name: "Teresina", state: "PI", ibgeCode: "2211001", latitude: -5.0892, longitude: -42.8019 },
-  { name: "São Luís", state: "MA", ibgeCode: "2111300", latitude: -2.5297, longitude: -44.3028 },
-  { name: "Palmas", state: "TO", ibgeCode: "1721000", latitude: -10.1689, longitude: -48.3317 },
-  { name: "Porto Velho", state: "RO", ibgeCode: "1100205", latitude: -8.7619, longitude: -63.9039 },
-  { name: "Rio Branco", state: "AC", ibgeCode: "1200401", latitude: -9.9754, longitude: -67.8249 },
-  { name: "Boa Vista", state: "RR", ibgeCode: "1400100", latitude: 2.8235, longitude: -60.6758 },
-  { name: "Macapá", state: "AP", ibgeCode: "1600303", latitude: 0.0349, longitude: -51.0694 },
-];
-
-function haversineKm(a: CityReference, lat: number, lon: number): number {
-  const R = 6371;
-  const dLat = ((lat - a.latitude) * Math.PI) / 180;
-  const dLon = ((lon - a.longitude) * Math.PI) / 180;
-  const s =
-    Math.sin(dLat / 2) ** 2 + Math.cos((a.latitude * Math.PI) / 180) * Math.cos((lat * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
-}
 
 /**
  * Arredonda para 1 casa decimal (~11km de precisao) antes de qualquer uso
@@ -92,25 +61,6 @@ function haversineKm(a: CityReference, lat: number, lon: number): number {
  */
 export function roundCoordinate(value: number): number {
   return Math.round(value * 10) / 10;
-}
-
-/**
- * Encontra a capital de referencia mais proxima. Retorna o padrao
- * (Santa Maria) se nenhuma capital estiver a menos de 400km — nesse caso
- * a previsao da capital mais proxima seria enganosa demais para ser util.
- */
-export function nearestReferenceCity(latitude: number, longitude: number): CityReference {
-  const rounded = { lat: roundCoordinate(latitude), lon: roundCoordinate(longitude) };
-  let best = DEFAULT_CITY;
-  let bestDistance = haversineKm(DEFAULT_CITY, rounded.lat, rounded.lon);
-  for (const city of REFERENCE_CITIES) {
-    const distance = haversineKm(city, rounded.lat, rounded.lon);
-    if (distance < bestDistance) {
-      best = city;
-      bestDistance = distance;
-    }
-  }
-  return bestDistance <= 400 ? best : DEFAULT_CITY;
 }
 
 export type WeatherFreshness = "delayed" | "unavailable";
@@ -131,6 +81,11 @@ export interface WeatherSnapshot {
   updatedAt: string | null;
   freshnessStatus: WeatherFreshness;
   error?: string;
+  /** Preenchidos só quando a localização veio de geolocalização (ver /api/market/weather). */
+  stationName?: string;
+  distanceKm?: number;
+  /** true quando nenhuma estação próxima foi encontrada e o resultado voltou para Santa Maria. */
+  locationFallback?: boolean;
 }
 
 function currentPeriod(): "manha" | "tarde" | "noite" {

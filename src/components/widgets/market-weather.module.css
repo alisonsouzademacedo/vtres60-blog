@@ -7,5 +7,5 @@
 .weatherHint{display:block;margin-top:6px;color:#b45309;font-size:9px}
 .unavailableValue{display:flex;align-items:center;gap:5px;color:#b45309;font-size:12px}
 .neutral{color:#667085}
-.sourceTag{display:block;margin-top:4px;font-size:8px;color:#98a2b3;font-style:normal}
+.sourceTag{display:block;margin-top:4px;font-size:8px;color:#667085;font-style:normal}
 @media(max-width:900px){.layout{grid-template-columns:1fr}.quotes{grid-template-columns:repeat(3,1fr)}.quote:nth-child(3){border-right:0}.quote:nth-child(-n+3){border-bottom:1px solid var(--line)}}@media(max-width:500px){.quotes{grid-template-columns:repeat(2,1fr)}.quote:nth-child(3){border-right:1px solid var(--line)}.quote:nth-child(even){border-right:0}.quote:nth-child(4){border-bottom:1px solid var(--line)}}

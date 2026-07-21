@@ -29,7 +29,7 @@ function assertNoBlockingViolations(violations: { id: string; impact?: string | 
   }
 }
 
-const PUBLIC_PAGES = ["/", "/noticias", "/categorias/marketing-industrial", "/empresas/weg", "/buscar", "/segmentos", "/segmentos/metalurgia"];
+const PUBLIC_PAGES = ["/", "/noticias", "/categorias/marketing-industrial", "/empresas/weg", "/buscar", "/segmentos", "/segmentos/metalurgia", "/agenda"];
 
 for (const path_ of PUBLIC_PAGES) {
   test(`axe: ${path_} sem violações P0/P1`, async ({ page }) => {
@@ -79,7 +79,7 @@ test.describe("axe: admin", () => {
     await page.getByRole("button", { name: /Acessar painel/i }).click();
     await page.waitForURL(/\/admin(?!\/login)/, { timeout: 10_000 });
 
-    for (const adminPath of ["/admin/segmentos", "/admin/configuracoes", "/admin/leads"]) {
+    for (const adminPath of ["/admin/segmentos", "/admin/configuracoes", "/admin/leads", "/admin/agenda"]) {
       await page.goto(withBasePath(adminPath));
       const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
       try {
