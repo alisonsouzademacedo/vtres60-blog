@@ -50,7 +50,7 @@ beforeEach(() => {
   exactDedupeMock.mockResolvedValue({ dedupeStatus: "unique" });
   contentExtractorMock.mockResolvedValue({ sourceText: "texto extraído" });
   newsworthinessMock.mockResolvedValue({ isNewsworthy: true });
-  drafterMock.mockResolvedValue({ finalPost: { titulo: "t", conteudo: "c", excerpt: "e", impact: "i", categoryId: "cat", tagIds: [], companies: [] }, draftAttempts: 1 });
+  drafterMock.mockResolvedValue({ finalPost: { titulo: "t", conteudo: "c", excerpt: "e", impact: "i", categoryId: "cat", tagIds: [], companies: [], segmentSlugs: [] }, draftAttempts: 1 });
   internalAuditorMock.mockResolvedValue({ auditApproved: true });
   semanticDedupeMock.mockResolvedValue({ dedupeStatus: "unique" });
   imageProcessorMock.mockResolvedValue({ imageResult: { status: "success", origin: "pexels", finalImageUrl: "https://x/y.webp" } });

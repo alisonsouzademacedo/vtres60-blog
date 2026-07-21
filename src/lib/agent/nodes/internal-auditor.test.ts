@@ -34,6 +34,7 @@ function baseFinalPost(overrides: Partial<NonNullable<AgentState["finalPost"]>> 
     categoryId: "cat-teste",
     tagIds: [],
     companies: [],
+    segmentSlugs: [],
     ...overrides,
   };
 }

@@ -6,7 +6,21 @@ import type { ContentRepository } from "@/services/cms/content-repository";
 import type { Article } from "@/types/content";
 import type { EducationalArticle, ManagedAuthor, ManagedCategory, ManagedPost, ManagedTag } from "@/types/editorial";
 
-const visible=(status:string,scheduledAt:string)=>status==="published"||(status==="scheduled"&&Boolean(scheduledAt)&&new Date(scheduledAt)<=new Date());
+export const visible=(status:string,scheduledAt:string)=>status==="published"||(status==="scheduled"&&Boolean(scheduledAt)&&new Date(scheduledAt)<=new Date());
+// Fase 8B — contagem real de posts por segmento, calculada em tempo de
+// leitura a partir de posts.segment_slugs (nunca mais um NumberField
+// digitado manualmente no admin). Mesma regra de visibilidade publica ja
+// usada por allArticles(): draft nunca conta; scheduled so conta quando a
+// data ja chegou.
+export async function countPostsBySegment():Promise<Record<string,number>>{
+  const posts=await editorialRepository.listPosts();
+  const counts:Record<string,number>={};
+  for(const post of posts){
+    if(!visible(post.status,post.scheduledAt))continue;
+    for(const slug of post.segmentSlugs)counts[slug]=(counts[slug]??0)+1;
+  }
+  return counts;
+}
 function resolveAuthor(id:string,authors:ManagedAuthor[]){const author=authors.find(item=>item.id===id);return author?{name:author.name,slug:author.slug,role:author.role}:{name:"Redação VTRES60",slug:"redacao-vtres60",role:"Inteligência Industrial"}}
 function resolveCategory(id:string,categories:ManagedCategory[]){return categories.find(item=>item.id===id)??{name:"Indústria",slug:"industria"}}
 function resolveTags(ids:string[],tags:ManagedTag[]){return ids.map(id=>tags.find(item=>item.id===id)?.name).filter((name):name is string=>Boolean(name))}
@@ -20,5 +34,5 @@ export const localContentRepository: ContentRepository = {
   async listCompanies(){return companies},async getCompanyBySlug(slug){return companies.find(company=>company.slug===slug)},
   async listEvents(){const items=await operationsRepository.listEvents();return items.filter(item=>item.status==="active").sort((a,b)=>a.displayOrder-b.displayOrder).map(item=>({id:item.id,title:item.name,slug:item.slug,date:eventDate(item.startDate,item.endDate),month:item.month,location:`${item.city}, ${item.state}`,segment:item.segment,image:item.mainImage,imageAlt:item.imageAlt,startDate:item.startDate,endDate:item.endDate,venue:item.venue,address:item.address,expectedAudience:item.expectedAudience,exhibitors:item.exhibitors,description:item.description,whyFollow:item.whyFollow,opportunities:item.opportunities,ctaUrl:item.officialUrl,dataStatus:item.dataStatus,additionalImages:item.additionalImages,city:item.city,state:item.state,status:item.status,showOnHome:item.showOnHome,displayOrder:item.displayOrder,relatedEventIds:item.relatedEventIds,ctaLabel:item.ctaLabel}))},
   async listSegments(){return(await operationsRepository.listSegments()).sort((a,b)=>a.order-b.order).map(item=>item.name)},
-  async listSegmentProfiles(){return(await operationsRepository.listSegments()).sort((a,b)=>a.order-b.order).map(item=>({name:item.name,slug:item.slug,image:item.image,imageAlt:item.imageAlt,articleCount:item.articleCount,description:item.description,icon:item.icon,order:item.order,showOnHome:item.showOnHome,metaTitle:item.metaTitle,metaDescription:item.metaDescription}))},
+  async listSegmentProfiles(){const[segments,counts]=await Promise.all([operationsRepository.listSegments(),countPostsBySegment()]);return segments.sort((a,b)=>a.order-b.order).map(item=>({name:item.name,slug:item.slug,image:item.image,imageAlt:item.imageAlt,articleCount:counts[item.slug]??0,description:item.description,icon:item.icon,order:item.order,showOnHome:item.showOnHome,metaTitle:item.metaTitle,metaDescription:item.metaDescription}))},
 };

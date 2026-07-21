@@ -6,6 +6,12 @@
   "primaryUrl": "https://www.vtres60.com.br/blog",
   "contactEmail": "portal@vtres60.com.br",
   "phone": "+55 11 0000-0000",
+  "whatsapp": {
+    "displayNumber": "(55) 9663-4475",
+    "normalizedNumber": "555596634475",
+    "defaultMessage": "Olá, vim pelo portal de notícias da VTRES60 e gostaria de falar com um especialista.",
+    "enabled": true
+  },
   "socialLinks": [
     {
       "network": "LinkedIn",

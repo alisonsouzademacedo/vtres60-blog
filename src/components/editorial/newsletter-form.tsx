@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { ArrowRight } from "@/components/ui/icons";
 import { withBasePath } from "@/lib/paths";
 import type { HomeSettings } from "@/types/admin";
@@ -46,8 +47,8 @@ export function NewsletterForm({ config }: { config: HomeSettings["newsletter"] 
   const configured = new Set(config.fields.map((field) => field.name));
   return (
     <form onSubmit={submit}>
-      <strong>Receba o briefing gratuitamente</strong>
-      <p>Uma leitura objetiva, de segunda a sexta.</p>
+      <strong>Entre na lista do Briefing Industrial</strong>
+      <p>Deixe seu contato para acompanhar o lançamento e as próximas atualizações.</p>
       <div aria-hidden="true" style={{ display: "none" }}>
         <label htmlFor="newsletter-website">Website</label>
         <input id="newsletter-website" name="website" tabIndex={-1} autoComplete="off" />
@@ -84,7 +85,10 @@ export function NewsletterForm({ config }: { config: HomeSettings["newsletter"] 
       ))}
       <label className="newsletter-consent">
         <input name="consent" type="checkbox" required />
-        <span>Aceito receber a newsletter da VTRES60 e sei que posso cancelar quando quiser.</span>
+        <span>
+          Aceito que a VTRES60 guarde meu contato para me avisar quando o Briefing Industrial começar a ser enviado,
+          conforme a <Link href="/privacidade">Política de Privacidade</Link>.
+        </span>
       </label>
       <button type="submit" disabled={state === "loading"}>
         {state === "loading" ? "Enviando..." : config.buttonText}
@@ -95,7 +99,7 @@ export function NewsletterForm({ config }: { config: HomeSettings["newsletter"] 
           {message}
         </small>
       ) : (
-        <small>Sem spam. Cancele quando quiser.</small>
+        <small>Sem spam. Seus dados não são compartilhados com terceiros.</small>
       )}
     </form>
   );

@@ -29,7 +29,7 @@ function assertNoBlockingViolations(violations: { id: string; impact?: string | 
   }
 }
 
-const PUBLIC_PAGES = ["/", "/noticias", "/categorias/marketing-industrial", "/empresas/weg", "/buscar"];
+const PUBLIC_PAGES = ["/", "/noticias", "/categorias/marketing-industrial", "/empresas/weg", "/buscar", "/segmentos", "/segmentos/metalurgia"];
 
 for (const path_ of PUBLIC_PAGES) {
   test(`axe: ${path_} sem violações P0/P1`, async ({ page }) => {
@@ -63,5 +63,30 @@ test.describe("axe: admin", () => {
     await page.goto(withBasePath("/admin/agente"));
     const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
     assertNoBlockingViolations(results.violations);
+  });
+
+  // Fase 8B — segmentos (contagem real/read-only), configurações (novo
+  // bloco WhatsApp) e leads (captação) são as telas administrativas
+  // tocadas nesta fase. UM login só (não um por página): o login de admin
+  // é rate-limited a 8 tentativas/15min por IP (rate-limit.ts) — este
+  // describe já soma 2 logins (login/agente) mais os do admin.spec.ts;
+  // um login por página aqui estourava o limite ao rodar a suíte inteira
+  // em paralelo (visto empiricamente: waitForURL expirava após a 8ª
+  // tentativa de login na mesma janela).
+  test("axe: /admin/segmentos, /admin/configuracoes, /admin/leads (autenticado, mesma sessão) sem violações P0/P1", async ({ page }) => {
+    await page.goto(withBasePath("/admin/login"));
+    await page.locator("#admin-password").fill(ADMIN_PASSWORD!);
+    await page.getByRole("button", { name: /Acessar painel/i }).click();
+    await page.waitForURL(/\/admin(?!\/login)/, { timeout: 10_000 });
+
+    for (const adminPath of ["/admin/segmentos", "/admin/configuracoes", "/admin/leads"]) {
+      await page.goto(withBasePath(adminPath));
+      const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+      try {
+        assertNoBlockingViolations(results.violations);
+      } catch (error) {
+        throw new Error(`${adminPath}: ${(error as Error).message}`);
+      }
+    }
   });
 });

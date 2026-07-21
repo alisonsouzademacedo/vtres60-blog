@@ -12,8 +12,17 @@ vi.mock("@/services/editorial", () => ({
 }));
 
 const logMock = vi.fn();
+const listSegmentsMock = vi.fn();
 vi.mock("@/services/operations", () => ({
-  operationsRepository: { log: (...args: unknown[]) => logMock(...args) },
+  operationsRepository: {
+    log: (...args: unknown[]) => logMock(...args),
+    listSegments: (...args: unknown[]) => listSegmentsMock(...args),
+  },
+}));
+
+const getSettingsMock = vi.fn();
+vi.mock("@/services/config", () => ({
+  configRepository: { getSettings: (...args: unknown[]) => getSettingsMock(...args) },
 }));
 
 import type { AgentState } from "../state";
@@ -25,6 +34,14 @@ const VALID_TAGS = [
   { id: "tag-teste", name: "Tag de Teste", slug: "tag-de-teste", description: "" },
   { id: "tag-outra", name: "Outra Tag", slug: "outra-tag", description: "" },
 ];
+const VALID_SEGMENTS = [
+  { id: "segment-metalurgia", name: "Metalurgia", slug: "metalurgia", articleCount: 0, order: 1 },
+  { id: "segment-textil", name: "Têxtil", slug: "textil", articleCount: 0, order: 2 },
+];
+const TEST_SETTINGS = {
+  contactEmail: "portal@vtres60.com.br",
+  whatsapp: { enabled: true, displayNumber: "(55) 9663-4475", normalizedNumber: "555596634475", defaultMessage: "Olá" },
+};
 
 function baseFinalPost(overrides: Partial<NonNullable<AgentState["finalPost"]>> = {}): NonNullable<AgentState["finalPost"]> {
   return {
@@ -35,6 +52,7 @@ function baseFinalPost(overrides: Partial<NonNullable<AgentState["finalPost"]>> 
     categoryId: "cat-teste",
     tagIds: [],
     companies: [],
+    segmentSlugs: [],
     ...overrides,
   };
 }
@@ -95,8 +113,12 @@ beforeEach(() => {
   logMock.mockReset();
   listCategoriesMock.mockReset();
   listTagsMock.mockReset();
+  listSegmentsMock.mockReset();
+  getSettingsMock.mockReset();
   listCategoriesMock.mockResolvedValue(VALID_CATEGORIES);
   listTagsMock.mockResolvedValue(VALID_TAGS);
+  listSegmentsMock.mockResolvedValue(VALID_SEGMENTS);
+  getSettingsMock.mockResolvedValue(TEST_SETTINGS);
   createPostMock.mockImplementation(async (payload: Record<string, unknown>) => ({
     ...payload,
     id: "post-id-1",
@@ -215,6 +237,83 @@ describe("publisherNode — categoria/tags/companies (Fase 3)", () => {
     const payload = createPostMock.mock.calls[0][0];
     expect(payload.companies).toEqual([]);
     expect(result.publishedPostId).toBe("post-id-1");
+  });
+});
+
+describe("publisherNode — segmentação real (Fase 8B)", () => {
+  it("persiste um segmento central único", async () => {
+    await publisherNode(baseState({ finalPost: baseFinalPost({ segmentSlugs: ["metalurgia"] }) }));
+    const payload = createPostMock.mock.calls[0][0];
+    expect(payload.segmentSlugs).toEqual(["metalurgia"]);
+  });
+
+  it("persiste múltiplos segmentos centrais", async () => {
+    await publisherNode(baseState({ finalPost: baseFinalPost({ segmentSlugs: ["metalurgia", "textil"] }) }));
+    const payload = createPostMock.mock.calls[0][0];
+    expect(payload.segmentSlugs).toEqual(["metalurgia", "textil"]);
+  });
+
+  it("nenhum segmento é um resultado legítimo — não usa fallback genérico", async () => {
+    await publisherNode(baseState({ finalPost: baseFinalPost({ segmentSlugs: [] }) }));
+    const payload = createPostMock.mock.calls[0][0];
+    expect(payload.segmentSlugs).toEqual([]);
+  });
+
+  it("nunca grava segmentSlugs:[] hardcoded quando há segmentos válidos vindos do draft (regressão do bug da Fase 8A)", async () => {
+    await publisherNode(baseState({ finalPost: baseFinalPost({ segmentSlugs: ["metalurgia"] }) }));
+    const payload = createPostMock.mock.calls[0][0];
+    expect(payload.segmentSlugs).not.toEqual([]);
+  });
+
+  it("filtra slug inventado, publicação segue normalmente", async () => {
+    const result = await publisherNode(baseState({ finalPost: baseFinalPost({ segmentSlugs: ["setor-fantasma"] }) }));
+    const payload = createPostMock.mock.calls[0][0];
+    expect(payload.segmentSlugs).toEqual([]);
+    expect(result.publishedPostId).toBe("post-id-1");
+    expect(logMock).toHaveBeenCalledWith("classificacao_taxonomia", "agente", expect.stringContaining("setor-fantasma"));
+  });
+
+  it("slug duplicado é colapsado a uma única ocorrência", async () => {
+    await publisherNode(baseState({ finalPost: baseFinalPost({ segmentSlugs: ["metalurgia", "metalurgia"] }) }));
+    const payload = createPostMock.mock.calls[0][0];
+    expect(payload.segmentSlugs).toEqual(["metalurgia"]);
+  });
+
+  it("registra segmentos aceitos e descartados na telemetria (log), sem corpo da notícia", async () => {
+    await publisherNode(baseState({ finalPost: baseFinalPost({ segmentSlugs: ["metalurgia", "setor-fantasma"] }) }));
+    expect(logMock).toHaveBeenCalledWith(
+      "classificacao_taxonomia",
+      "agente",
+      expect.stringMatching(/segmentos aceitos: \[metalurgia\]/),
+    );
+    const [, , message] = logMock.mock.calls.find(([, , msg]) => typeof msg === "string" && msg.includes("segmentos"))!;
+    expect(message).not.toMatch(/Primeiro parágrafo/);
+  });
+
+  it("preserva categoria/tags/companies/excerpt/impact intactos ao adicionar segmentos", async () => {
+    await publisherNode(
+      baseState({ finalPost: baseFinalPost({ segmentSlugs: ["metalurgia"], tagIds: ["tag-teste"], companies: ["WEG"] }) }),
+    );
+    const payload = createPostMock.mock.calls[0][0];
+    expect(payload.categoryId).toBe("cat-teste");
+    expect(payload.tagIds).toEqual(["tag-teste"]);
+    expect(payload.excerpt).toBe("Resumo curto do fato central.");
+  });
+});
+
+describe("publisherNode — CTA comercial via WhatsApp (Fase 8B)", () => {
+  it("usa a URL wa.me construída a partir das settings, não mais mailto hardcoded", async () => {
+    await publisherNode(baseState());
+    const payload = createPostMock.mock.calls[0][0];
+    expect(payload.cta.url).toBe("https://wa.me/555596634475?text=Ol%C3%A1");
+    expect(payload.cta.label).toBe("Falar com um especialista");
+  });
+
+  it("cai para mailto institucional quando o WhatsApp está desabilitado nas settings", async () => {
+    getSettingsMock.mockResolvedValue({ ...TEST_SETTINGS, whatsapp: { ...TEST_SETTINGS.whatsapp, enabled: false } });
+    await publisherNode(baseState());
+    const payload = createPostMock.mock.calls[0][0];
+    expect(payload.cta.url).toBe("mailto:portal@vtres60.com.br");
   });
 });
 

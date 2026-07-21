@@ -40,6 +40,7 @@ function finalPost(overrides: Partial<{ titulo: string; conteudo: string; excerp
     categoryId: "cat-teste",
     tagIds: [],
     companies: [],
+    segmentSlugs: [],
     ...overrides,
   };
 }
