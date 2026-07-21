@@ -70,11 +70,11 @@ export interface IndustrialEvent {
   whyFollow: string[];
   opportunities: string[];
   ctaUrl: string;
-  dataStatus: "demonstrativo" | "confirmado";
+  dataStatus: "official_verified" | "manual_verified" | "unverified";
   additionalImages?: string[];
   city?: string;
   state?: string;
-  status?: "active" | "inactive";
+  status?: "candidate" | "verified" | "published" | "archived" | "cancelled";
   showOnHome?: boolean;
   displayOrder?: number;
   relatedEventIds?: string[];

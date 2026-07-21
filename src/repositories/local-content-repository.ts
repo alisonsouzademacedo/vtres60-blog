@@ -1,5 +1,6 @@
 import { companies } from "@/data/content";
 import { compareByRecency } from "@/lib/article-ordering";
+import { isVisibleToPublic } from "@/lib/agenda/event-lifecycle";
 import { editorialRepository } from "@/services/editorial";
 import { operationsRepository } from "@/services/operations";
 import type { ContentRepository } from "@/services/cms/content-repository";
@@ -32,7 +33,10 @@ const eventDate=(start:string,end:string)=>{const a=new Date(`${start}T12:00:00`
 export const localContentRepository: ContentRepository = {
   async listArticles(){return allArticles()},async getArticleBySlug(slug){return(await allArticles()).find(article=>article.slug===slug)},
   async listCompanies(){return companies},async getCompanyBySlug(slug){return companies.find(company=>company.slug===slug)},
-  async listEvents(){const items=await operationsRepository.listEvents();return items.filter(item=>item.status==="active").sort((a,b)=>a.displayOrder-b.displayOrder).map(item=>({id:item.id,title:item.name,slug:item.slug,date:eventDate(item.startDate,item.endDate),month:item.month,location:`${item.city}, ${item.state}`,segment:item.segment,image:item.mainImage,imageAlt:item.imageAlt,startDate:item.startDate,endDate:item.endDate,venue:item.venue,address:item.address,expectedAudience:item.expectedAudience,exhibitors:item.exhibitors,description:item.description,whyFollow:item.whyFollow,opportunities:item.opportunities,ctaUrl:item.officialUrl,dataStatus:item.dataStatus,additionalImages:item.additionalImages,city:item.city,state:item.state,status:item.status,showOnHome:item.showOnHome,displayOrder:item.displayOrder,relatedEventIds:item.relatedEventIds,ctaLabel:item.ctaLabel}))},
+  // Fase 8C (secao 19) — so eventos publicados, verificados e ainda nao
+  // expirados aparecem ao publico; ordenados por start_date (data real do
+  // evento), nao mais pelo displayOrder manual da fase anterior.
+  async listEvents(){const items=await operationsRepository.listEvents();return items.filter(item=>item.showOnHome&&isVisibleToPublic(item)).sort((a,b)=>a.startDate.localeCompare(b.startDate)).map(item=>({id:item.id,title:item.name,slug:item.slug,date:eventDate(item.startDate,item.endDate),month:item.month,location:`${item.city}, ${item.state}`,segment:item.segment,image:item.mainImage,imageAlt:item.imageAlt,startDate:item.startDate,endDate:item.endDate,venue:item.venue,address:item.address,expectedAudience:item.expectedAudience,exhibitors:item.exhibitors,description:item.description,whyFollow:item.whyFollow,opportunities:item.opportunities,ctaUrl:item.officialUrl,dataStatus:item.dataStatus,additionalImages:item.additionalImages,city:item.city,state:item.state,status:item.status,showOnHome:item.showOnHome,displayOrder:item.displayOrder,relatedEventIds:item.relatedEventIds,ctaLabel:item.ctaLabel}))},
   async listSegments(){return(await operationsRepository.listSegments()).sort((a,b)=>a.order-b.order).map(item=>item.name)},
   async listSegmentProfiles(){const[segments,counts]=await Promise.all([operationsRepository.listSegments(),countPostsBySegment()]);return segments.sort((a,b)=>a.order-b.order).map(item=>({name:item.name,slug:item.slug,image:item.image,imageAlt:item.imageAlt,articleCount:counts[item.slug]??0,description:item.description,icon:item.icon,order:item.order,showOnHome:item.showOnHome,metaTitle:item.metaTitle,metaDescription:item.metaDescription}))},
 };
