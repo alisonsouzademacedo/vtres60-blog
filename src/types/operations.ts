@@ -27,3 +27,37 @@ export interface MediaAsset { id:string;filename:string;url:string;altText:strin
 export interface Lead { id:string;name:string;email:string;company:string;role:string;phone:string;source:string;createdAt:string;interest:string;originPage:string }
 export interface AdminLog { id:string;action:string;createdAt:string;module:string;description:string }
 export interface BackupPayload { version:1;exportedAt:string;data:Record<string,unknown> }
+export interface ManagedCompany {
+  id: string; name: string; slug: string; legalName?: string; description: string; sector: string;
+  website: string; ticker?: string; tickerSource?: string; active: boolean; featured: boolean;
+  createdAt: string; updatedAt: string;
+}
+
+/**
+ * Fase 8D (Radar Industrial) — ciclo de vida do sinal editorial.
+ * "draft" -> "reviewed" -> "published" é a única sequência que permite
+ * publicação (mesma regra estrutural do EventStatus da Fase 8C:
+ * publicar exige ter passado por revisão antes). "expired" é atribuído
+ * automaticamente por varredura de leitura quando validUntil já passou
+ * (nunca manualmente). "rejected" é terminal, definido pelo admin.
+ */
+export type RadarSignalStatus = "draft" | "reviewed" | "published" | "expired" | "rejected";
+export interface RadarSignal {
+  id: string; title: string; summary: string;
+  evidencePostIds: string[]; sourceUrls: string[]; tagIds: string[]; segmentSlugs: string[]; companySlugs: string[];
+  confidence: "baixa" | "média" | "alta";
+  generatedAt: string; validUntil: string; status: RadarSignalStatus;
+  reviewedAt?: string; publishedAt?: string;
+  createdAt: string; updatedAt: string;
+}
+
+export type IntelligenceKind = "fact" | "analysis" | "recommendation";
+export type IntelligenceStatus = "draft" | "reviewed" | "published" | "expired" | "rejected";
+export interface IntelligenceItem {
+  id: string; radarSignalId: string; kind: IntelligenceKind; title: string; analysis: string; recommendedAction?: string;
+  evidencePostIds: string[]; sourceUrls: string[]; segmentSlugs: string[]; companySlugs: string[];
+  confidence: "baixa" | "média" | "alta";
+  generatedAt: string; validUntil: string; status: IntelligenceStatus;
+  reviewedAt?: string; publishedAt?: string;
+  createdAt: string; updatedAt: string;
+}
