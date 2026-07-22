@@ -1,6 +1,87 @@
-import { CloudSun, TrendingUp } from "@/components/ui/icons";
+import { getCachedCurrencies } from "@/lib/market/currency-provider";
+import { fetchAllCommodities } from "@/lib/market/commodities-provider";
+import { getCachedWeather } from "@/lib/market/weather-provider";
+import { AlertTriangle, TrendingUp } from "@/components/ui/icons";
+import { WeatherWidget } from "./weather-widget";
 import styles from "./market-weather.module.css";
 
-const quotes = [["Dólar","R$ 5,48","+0,42%"],["Euro","R$ 6,41","+0,18%"],["Petróleo","US$ 68,74","−0,31%"],["Aço","US$ 457","+1,12%"],["Alumínio","US$ 2.535","+0,22%"],["Cobre","US$ 9.842","+0,74%"]];
+/**
+ * Fase 8C — substitui os dados 100% mockados da Fase 8A/8B por fontes
+ * reais (BCB/PTAX para moedas, World Bank Pink Sheet para commodities,
+ * INMET para clima). Ver docs/fontes-mercado-clima-fase8c.md para o
+ * detalhe de cada fonte, e a secao 4/11 da spec para a regra de
+ * veracidade que rege este componente: nunca mostrar valor fictício,
+ * sempre mostrar fonte/data/frequência, e nunca voltar para o mock
+ * antigo quando uma fonte falha (mostra "indisponível" em vez disso).
+ */
+export async function MarketWeather() {
+  const [{ data: currencies }, commodities, { data: weather }] = await Promise.all([
+    getCachedCurrencies(),
+    fetchAllCommodities(),
+    getCachedWeather(),
+  ]);
 
-export function MarketWeather(){return <section className={`section ${styles.section}`}><div className="container"><div className="section-head"><div><span className="eyebrow">Pulso da economia</span><h2 className="section-title">Mercado industrial</h2></div><span className={styles.update}>Dados demonstrativos · 18:00</span></div><div className={styles.layout}><div className={styles.quotes}>{quotes.map(([name,value,delta])=><div className={styles.quote} key={name}><span>{name}</span><strong>{value}</strong><small className={delta.startsWith("+")?styles.up:styles.down}><TrendingUp size={12}/>{delta}</small></div>)}</div><aside className={styles.weather}><div><CloudSun size={32}/><span>Joinville, SC<small>Parcialmente nublado</small></span></div><strong>21°</strong><footer>Máx. 25° <i/> Mín. 16°</footer></aside></div></div></section>}
+  const quotes = [...currencies, ...commodities];
+
+  return (
+    <section className={`section ${styles.section}`}>
+      <div className="container">
+        <div className="section-head">
+          <div>
+            <span className="eyebrow">Referências de mercado</span>
+            <h2 className="section-title">Moedas e commodities industriais</h2>
+          </div>
+        </div>
+        <div className={styles.layout}>
+          <div className={styles.quotes}>
+            {quotes.map((quote) => (
+              <div className={styles.quote} key={quote.id}>
+                <span>{quote.label}</span>
+                {quote.freshnessStatus === "unavailable" ? (
+                  <>
+                    <strong className={styles.unavailableValue}>
+                      <AlertTriangle size={12} /> Indisponível
+                    </strong>
+                    <small className={styles.neutral}>{quote.error ?? "Sem dado no momento"}</small>
+                  </>
+                ) : (
+                  <>
+                    <strong>{quote.formattedValue}</strong>
+                    {quote.variation != null ? (
+                      <small className={quote.variation >= 0 ? styles.up : styles.down}>
+                        <TrendingUp size={12} />
+                        {quote.variation >= 0 ? "+" : ""}
+                        {quote.variation.toFixed(2)}%
+                      </small>
+                    ) : (
+                      <small className={styles.neutral}>{quote.frequency}</small>
+                    )}
+                    <em className={styles.sourceTag}>
+                      {freshnessLabel(quote.freshnessStatus)} · {quote.sourceName}
+                    </em>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+          <WeatherWidget initial={weather} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function freshnessLabel(status: string): string {
+  switch (status) {
+    case "live":
+      return "Ao vivo";
+    case "delayed":
+      return "Cotação de referência";
+    case "stale":
+      return "Dado desatualizado";
+    case "updating":
+      return "Atualizando";
+    default:
+      return "Indisponível";
+  }
+}

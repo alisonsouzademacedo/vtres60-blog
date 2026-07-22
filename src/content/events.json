@@ -27,15 +27,15 @@
       "Acompanhar demandas de retrofit e eficiência energética",
       "Produzir conteúdo técnico conectado aos lançamentos da feira"
     ],
-    "officialUrl": "https://febrava.com.br",
+    "officialUrl": "https://www.febrava.com.br",
     "ctaLabel": "Visitar site do evento",
-    "status": "active",
+    "status": "candidate",
     "showOnHome": true,
     "displayOrder": 1,
     "relatedEventIds": [],
-    "dataStatus": "demonstrativo",
+    "dataStatus": "unverified",
     "createdAt": "2026-06-28T19:12:58.904Z",
-    "updatedAt": "2026-06-28T19:12:58.904Z"
+    "updatedAt": "2026-07-21T20:00:00.000Z"
   },
   {
     "id": "event-mercopar",
@@ -67,13 +67,13 @@
     ],
     "officialUrl": "https://mercopar.com.br",
     "ctaLabel": "Visitar site do evento",
-    "status": "active",
+    "status": "candidate",
     "showOnHome": true,
     "displayOrder": 2,
     "relatedEventIds": [],
-    "dataStatus": "demonstrativo",
+    "dataStatus": "unverified",
     "createdAt": "2026-06-28T19:12:58.904Z",
-    "updatedAt": "2026-06-28T19:12:58.904Z"
+    "updatedAt": "2026-07-21T20:00:00.000Z"
   },
   {
     "id": "event-fenasucro",
@@ -105,12 +105,14 @@
     ],
     "officialUrl": "https://www.fenasucro.com.br",
     "ctaLabel": "Visitar site do evento",
-    "status": "active",
+    "status": "published",
     "showOnHome": true,
     "displayOrder": 3,
     "relatedEventIds": [],
-    "dataStatus": "demonstrativo",
+    "dataStatus": "official_verified",
+    "verifiedAt": "2026-07-21T20:00:00.000Z",
+    "publishedAt": "2026-07-21T20:00:00.000Z",
     "createdAt": "2026-06-28T19:12:58.904Z",
-    "updatedAt": "2026-06-28T19:12:58.904Z"
+    "updatedAt": "2026-07-21T20:00:00.000Z"
   }
 ]

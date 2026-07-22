@@ -1,0 +1,31 @@
+{
+  "source": "World Bank Commodity Markets (Pink Sheet)",
+  "sourceUrl": "https://www.worldbank.org/en/research/commodity-markets",
+  "fileUrl": "https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Monthly.xlsx",
+  "license": "CC-BY (Creative Commons Attribution)",
+  "referenceMonth": "2026M06",
+  "publishedOn": "July 02, 2026",
+  "fetchedAt": "2026-07-21T20:08:15.711523+00:00",
+  "series": {
+    "oil": {
+      "label": "Crude oil, average",
+      "unit": "($/bbl)",
+      "value": 81.7
+    },
+    "aluminum": {
+      "label": "Aluminum",
+      "unit": "($/mt)",
+      "value": 3439
+    },
+    "iron_ore": {
+      "label": "Iron ore, cfr spot",
+      "unit": "($/dmtu)",
+      "value": 100.8
+    },
+    "copper": {
+      "label": "Copper",
+      "unit": "($/mt)",
+      "value": 13552
+    }
+  }
+}

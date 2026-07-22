@@ -1,0 +1,82 @@
+[
+  {
+    "id": "company-weg",
+    "name": "WEG",
+    "slug": "weg",
+    "description": "Motores, energia, automação e transformação industrial.",
+    "sector": "Tecnologia industrial",
+    "website": "https://www.weg.net",
+    "ticker": "WEGE3",
+    "tickerSource": "Ticker já presente na base editorial anterior; símbolo público B3/CVM.",
+    "active": true,
+    "featured": false,
+    "createdAt": "2026-07-22T17:49:21.132Z",
+    "updatedAt": "2026-07-22T17:49:21.132Z"
+  },
+  {
+    "id": "company-gerdau",
+    "name": "Gerdau",
+    "slug": "gerdau",
+    "description": "Aço, construção, mobilidade e economia circular.",
+    "sector": "Siderurgia",
+    "website": "https://www.gerdau.com",
+    "ticker": "GGBR4",
+    "tickerSource": "Ticker já presente na base editorial anterior; símbolo público B3/CVM.",
+    "active": true,
+    "featured": false,
+    "createdAt": "2026-07-22T17:49:21.132Z",
+    "updatedAt": "2026-07-22T17:49:21.132Z"
+  },
+  {
+    "id": "company-marcopolo",
+    "name": "Marcopolo",
+    "slug": "marcopolo",
+    "description": "Transporte coletivo, manufatura e mercados globais.",
+    "sector": "Mobilidade",
+    "website": "https://www.marcopolo.com.br",
+    "ticker": "POMO4",
+    "tickerSource": "Ticker já presente na base editorial anterior; símbolo público B3/CVM.",
+    "active": true,
+    "featured": false,
+    "createdAt": "2026-07-22T17:49:21.132Z",
+    "updatedAt": "2026-07-22T17:49:21.132Z"
+  },
+  {
+    "id": "company-randon",
+    "name": "Randon",
+    "slug": "randon",
+    "description": "Implementos, autopeças e soluções para mobilidade.",
+    "sector": "Autopeças",
+    "website": "https://www.randon.com.br",
+    "ticker": "RAPT4",
+    "tickerSource": "Ticker já presente na base editorial anterior; símbolo público B3/CVM.",
+    "active": true,
+    "featured": false,
+    "createdAt": "2026-07-22T17:49:21.132Z",
+    "updatedAt": "2026-07-22T17:49:21.132Z"
+  },
+  {
+    "id": "company-john-deere",
+    "name": "John Deere",
+    "slug": "john-deere",
+    "description": "Tecnologia, máquinas e produtividade no campo.",
+    "sector": "Máquinas agrícolas",
+    "website": "https://www.deere.com",
+    "active": true,
+    "featured": false,
+    "createdAt": "2026-07-22T17:49:21.132Z",
+    "updatedAt": "2026-07-22T17:49:21.132Z"
+  },
+  {
+    "id": "company-tramontina",
+    "name": "Tramontina",
+    "slug": "tramontina",
+    "description": "Manufatura, design e presença internacional.",
+    "sector": "Bens de consumo",
+    "website": "https://www.tramontina.com.br",
+    "active": true,
+    "featured": false,
+    "createdAt": "2026-07-22T17:49:21.132Z",
+    "updatedAt": "2026-07-22T17:49:21.132Z"
+  }
+]

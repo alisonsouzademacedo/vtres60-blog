@@ -35,7 +35,16 @@ export const AgentStateAnnotation = Annotation.Root({
     default: () => "",
   }),
   finalPost: Annotation<
-    | { titulo: string; conteudo: string; excerpt: string; impact: string; categoryId: string; tagIds: string[]; companies: string[] }
+    | {
+        titulo: string;
+        conteudo: string;
+        excerpt: string;
+        impact: string;
+        categoryId: string;
+        tagIds: string[];
+        companies: string[];
+        segmentSlugs: string[];
+      }
     | undefined
   >({
     reducer: (_current, next) => next,

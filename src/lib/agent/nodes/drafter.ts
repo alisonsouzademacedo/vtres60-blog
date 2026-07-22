@@ -6,9 +6,11 @@ import type { AgentState, AgentStateUpdate } from "../state";
 import {
   formatCategoriesForPrompt,
   formatCompanyHubsForPrompt,
+  formatSegmentsForPrompt,
   formatTagsForPrompt,
   loadValidCategories,
   loadValidCompanyHubs,
+  loadValidSegments,
   loadValidTags,
 } from "../taxonomies";
 
@@ -65,20 +67,44 @@ export const DraftSchema = z.object({
         "mencoes secundarias. Lista vazia e valida quando a empresa central nao tiver hub. Nunca invente nomes " +
         "fora da lista fornecida.",
     ),
+  segmentSlugs: z
+    .array(z.string())
+    .describe(
+      "Slugs EXATOS de segmento industrial (mensagem separada) cujo setor tem relacao central ou aplicacao " +
+        "industrial diretamente comprovavel no texto da noticia. Nunca associe por palavra isolada, por exemplo " +
+        "secundario, ou porque uma empresa do setor foi apenas citada de passagem. Zero, um ou varios slugs sao " +
+        "validos — lista vazia e o resultado correto quando nenhum setor for central ao fato. Nunca invente slugs " +
+        "fora da lista fornecida, nunca preencha todos os segmentos por seguranca.",
+    ),
 });
 
-async function loadTaxonomyBlock(): Promise<{ block: string; validCategoryIds: string[]; validTagIds: string[]; validCompanyNames: string[] }> {
-  const [categories, tags, hubs] = await Promise.all([loadValidCategories(), loadValidTags(), Promise.resolve(loadValidCompanyHubs())]);
+async function loadTaxonomyBlock(): Promise<{
+  block: string;
+  validCategoryIds: string[];
+  validTagIds: string[];
+  validCompanyNames: string[];
+  validSegmentSlugs: string[];
+}> {
+  const [categories, tags, hubs, segments] = await Promise.all([
+    loadValidCategories(),
+    loadValidTags(),
+    Promise.resolve(loadValidCompanyHubs()),
+    loadValidSegments(),
+  ]);
   const block =
     `CATEGORIAS VÁLIDAS (escolha exatamente um id em categoryId):\n${formatCategoriesForPrompt(categories)}\n\n` +
     `TAGS VÁLIDAS (escolha zero ou mais ids em tagIds, apenas as centrais ao fato):\n${formatTagsForPrompt(tags)}\n\n` +
     `EMPRESAS COM HUB EDITORIAL (associe pelo nome exato em companies, apenas se central ao fato; empresas fora ` +
-    `desta lista NUNCA devem ser retornadas):\n${formatCompanyHubsForPrompt(hubs)}`;
+    `desta lista NUNCA devem ser retornadas):\n${formatCompanyHubsForPrompt(hubs)}\n\n` +
+    `SEGMENTOS INDUSTRIAIS VÁLIDOS (escolha zero ou mais slugs em segmentSlugs, apenas quando o setor tiver ` +
+    `relação central ou aplicação industrial diretamente comprovável no fato; nunca invente slugs fora desta ` +
+    `lista):\n${formatSegmentsForPrompt(segments)}`;
   return {
     block,
     validCategoryIds: categories.map((category) => category.id),
     validTagIds: tags.map((tag) => tag.id),
     validCompanyNames: hubs.map((hub) => hub.name),
+    validSegmentSlugs: segments.map((segment) => segment.slug),
   };
 }
 
@@ -145,6 +171,7 @@ export async function drafterNode(state: AgentState): Promise<AgentStateUpdate> 
       categoryId: result.categoryId,
       tagIds: result.tagIds,
       companies: result.companies,
+      segmentSlugs: result.segmentSlugs,
     },
     imageKeyword: result.imageKeyword,
     companyDomain,

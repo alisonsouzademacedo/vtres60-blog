@@ -2,6 +2,18 @@ export interface NavigationLink { label: string; url: string }
 export interface SocialLink extends NavigationLink { network: string }
 export interface FooterColumn { title: string; links: NavigationLink[] }
 
+// Fase 8B — fonte canonica do CTA comercial "Falar com um especialista".
+// displayNumber e so apresentacional (o que aparece no admin/rodape, se
+// exibido); normalizedNumber e o que de fato compoe a URL wa.me (apenas
+// digitos, com codigo do pais, sem espacos/parenteses/hifen). enabled
+// permite desligar o canal (todos os CTAs somem) sem apagar o numero.
+export interface WhatsAppSettings {
+  displayNumber: string;
+  normalizedNumber: string;
+  defaultMessage: string;
+  enabled: boolean;
+}
+
 export interface PortalSettings {
   portalName: string;
   subtitle: string;
@@ -10,6 +22,7 @@ export interface PortalSettings {
   primaryUrl: string;
   contactEmail: string;
   phone: string;
+  whatsapp: WhatsAppSettings;
   socialLinks: SocialLink[];
   footerText: string;
   footerNote: string;

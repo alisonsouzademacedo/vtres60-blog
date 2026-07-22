@@ -8,6 +8,9 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/services/editorial", () => ({
   editorialRepository: { listCategories: vi.fn(), listTags: vi.fn() },
 }));
+vi.mock("@/services/operations", () => ({
+  operationsRepository: { listSegments: vi.fn().mockResolvedValue([]) },
+}));
 // drafter.ts tambem importa costs/usage-repository.ts (Fase 6, captura de
 // custo real do Drafter), que por sua vez importa @/lib/supabase (cria um
 // client real no carregamento do modulo, exigindo env vars) — mock minimo
@@ -27,6 +30,7 @@ const validDraft = {
   categoryId: "cat-teste",
   tagIds: ["tag-teste"],
   companies: ["WEG"],
+  segmentSlugs: ["metalurgia"],
 };
 
 describe("DraftSchema (Fase 2)", () => {
@@ -93,9 +97,29 @@ describe("DraftSchema — categoryId/tagIds/companies (Fase 3)", () => {
     expect(DraftSchema.safeParse({ ...validDraft, companies: "WEG" }).success).toBe(false);
   });
 
+  it("aceita segmentSlugs como lista vazia (nenhum setor central)", () => {
+    expect(DraftSchema.safeParse({ ...validDraft, segmentSlugs: [] }).success).toBe(true);
+  });
+
+  it("aceita segmentSlugs com múltiplos slugs", () => {
+    const result = DraftSchema.safeParse({ ...validDraft, segmentSlugs: ["metalurgia", "textil"] });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.segmentSlugs).toEqual(["metalurgia", "textil"]);
+  });
+
+  it("exige segmentSlugs — rejeita quando ausente", () => {
+    const withoutSegments: Record<string, unknown> = { ...validDraft };
+    delete withoutSegments.segmentSlugs;
+    expect(DraftSchema.safeParse(withoutSegments).success).toBe(false);
+  });
+
+  it("rejeita segmentSlugs que não seja array de strings", () => {
+    expect(DraftSchema.safeParse({ ...validDraft, segmentSlugs: "metalurgia" }).success).toBe(false);
+  });
+
   it("é o único DraftSchema do módulo — não há um schema V2/V3 paralelo", () => {
     expect(Object.keys(DraftSchema.shape).sort()).toEqual(
-      ["titulo", "conteudo", "excerpt", "impact", "imageKeyword", "companyDomain", "categoryId", "tagIds", "companies"].sort(),
+      ["titulo", "conteudo", "excerpt", "impact", "imageKeyword", "companyDomain", "categoryId", "tagIds", "companies", "segmentSlugs"].sort(),
     );
   });
 

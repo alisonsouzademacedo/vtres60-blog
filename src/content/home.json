@@ -9,7 +9,7 @@
       "url": "/noticias"
     },
     "secondaryButton": {
-      "label": "Receber o briefing diário",
+      "label": "Cadastrar no Briefing Industrial",
       "url": "/#newsletter"
     },
     "searchPlaceholder": "Pesquisar notícias, empresas, segmentos ou tecnologias...",
@@ -76,8 +76,8 @@
   "newsletter": {
     "enabled": true,
     "eyebrow": "Briefing Industrial",
-    "title": "Comece o dia sabendo o que realmente importa.",
-    "description": "Curadoria e interpretação para líderes que precisam decidir — não apenas acompanhar.",
+    "title": "Entre para a lista do Briefing Industrial.",
+    "description": "Deixe seu e-mail para acompanhar o lançamento e ser um dos primeiros a receber quando o envio começar.",
     "benefits": [
       "Principais notícias da indústria",
       "Tendências e oportunidades",
@@ -93,8 +93,8 @@
         "required": true
       }
     ],
-    "buttonText": "Assinar Briefing Industrial",
-    "successMessage": "Inscrição recebida. Bem-vindo ao Briefing Industrial."
+    "buttonText": "Quero entrar na lista",
+    "successMessage": "Cadastro recebido com sucesso. Você está na lista do Briefing Industrial."
   },
   "modules": {
     "radar": true,

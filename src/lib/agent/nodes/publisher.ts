@@ -1,18 +1,23 @@
 import { slugify } from "@/lib/content";
+import { buildDefaultCommercialCta } from "@/lib/whatsapp";
+import { configRepository } from "@/services/config";
 import { editorialRepository } from "@/services/editorial";
 import { operationsRepository } from "@/services/operations";
 import type { ManagedPost } from "@/types/editorial";
 import type { AgentState, AgentStateUpdate } from "../state";
 import { metaDescriptionFrom, stripBannedClosingPhrases } from "../text-guards";
-import { filterValidCompanies, filterValidTagIds, isValidCategoryId, loadValidCategories, loadValidCompanyHubs, loadValidTags } from "../taxonomies";
+import {
+  filterValidCompanies,
+  filterValidSegmentSlugs,
+  filterValidTagIds,
+  isValidCategoryId,
+  loadValidCategories,
+  loadValidCompanyHubs,
+  loadValidSegments,
+  loadValidTags,
+} from "../taxonomies";
 
 const DEFAULT_AUTHOR_ID = "author-redacao-vtres60";
-
-const DEFAULT_CTA = {
-  label: "Falar com um especialista",
-  url: "mailto:especialista@vtres60.com.br",
-  text: "Transforme informação em uma próxima decisão clara.",
-};
 
 function readingTimeFrom(text: string): number {
   const words = text.trim().split(/\s+/).filter(Boolean).length;
@@ -71,7 +76,7 @@ export async function publisherNode(state: AgentState): Promise<AgentStateUpdate
   }
   const imageResult = state.imageResult;
 
-  const { titulo, excerpt, impact, categoryId, tagIds, companies } = state.finalPost;
+  const { titulo, excerpt, impact, categoryId, tagIds, companies, segmentSlugs } = state.finalPost;
 
   // Fase 3 — backstop final de classificacao: o InternalAuditor ja rejeita
   // (mecanicamente, ate MAX_DRAFT_ATTEMPTS) um categoryId ausente ou fora
@@ -124,14 +129,22 @@ export async function publisherNode(state: AgentState): Promise<AgentStateUpdate
   // estrutural como categoryId: uma associacao invalida individual e
   // filtrada (nunca persistida) e registrada em log, mas nao bloqueia a
   // publicacao — lista vazia e um resultado legitimo (ex: BYD nao tem hub).
-  const [validTags, validCompanyHubs] = await Promise.all([loadValidTags(), Promise.resolve(loadValidCompanyHubs())]);
+  // Fase 8B — segmentos seguem o MESMO padrao de tags/companies: enriquecimento
+  // opcional, nunca fallback generico, lista vazia e resultado legitimo.
+  const [validTags, validCompanyHubs, validSegments, settings] = await Promise.all([
+    loadValidTags(),
+    Promise.resolve(loadValidCompanyHubs()),
+    loadValidSegments(),
+    configRepository.getSettings(),
+  ]);
   const tagFilter = filterValidTagIds(tagIds, validTags);
   const companyFilter = filterValidCompanies(companies, validCompanyHubs);
-  if (tagFilter.rejected.length || companyFilter.rejected.length) {
+  const segmentFilter = filterValidSegmentSlugs(segmentSlugs ?? [], validSegments);
+  if (tagFilter.rejected.length || companyFilter.rejected.length || segmentFilter.rejected.length) {
     await operationsRepository.log(
       "classificacao_taxonomia",
       "agente",
-      `tags rejeitadas: [${tagFilter.rejected.join(", ")}] | companies rejeitadas: [${companyFilter.rejected.join(", ")}] | título: ${titulo}`,
+      `tags rejeitadas: [${tagFilter.rejected.join(", ")}] | companies rejeitadas: [${companyFilter.rejected.join(", ")}] | segmentos rejeitados: [${segmentFilter.rejected.join(", ")}] | segmentos aceitos: [${segmentFilter.valid.join(", ")}] | título: ${titulo}`,
     );
   }
 
@@ -161,7 +174,7 @@ export async function publisherNode(state: AgentState): Promise<AgentStateUpdate
     imageWidth: imageResult.width,
     imageHeight: imageResult.height,
     categoryId,
-    segmentSlugs: [],
+    segmentSlugs: segmentFilter.valid,
     tagIds: tagFilter.valid,
     authorId: DEFAULT_AUTHOR_ID,
     publishedAt: now,
@@ -176,7 +189,7 @@ export async function publisherNode(state: AgentState): Promise<AgentStateUpdate
     contentType: "noticia",
     impact,
     companies: companyFilter.valid,
-    cta: DEFAULT_CTA,
+    cta: buildDefaultCommercialCta(settings),
     seo: {
       metaTitle: titulo,
       metaDescription: metaDescriptionFrom(excerpt),
