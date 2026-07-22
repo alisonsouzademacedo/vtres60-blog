@@ -1,7 +1,7 @@
 .head{max-width:640px;margin-bottom:32px}
 .head h1{font-size:clamp(32px,4vw,48px);letter-spacing:-.03em;margin:12px 0}
-.head p{color:#667085;line-height:1.55}
-.empty{padding:40px;text-align:center;color:#667085;border:1px dashed var(--line);border-radius:16px}
+.head p{color:#8f9bad;line-height:1.55}
+.empty{padding:40px;text-align:center;color:#8f9bad;border:1px dashed var(--line);border-radius:16px}
 .grid{display:grid;gap:20px}
 .card{border:1px solid var(--line);border-radius:16px;padding:28px;background:var(--surface,#fff)}
 .card time{color:#98a2b3;font-size:11px}
