@@ -71,3 +71,38 @@ describe("operationsRepository — varredura de expiração de sinais do Radar",
     expect(items[0].status).toBe("published");
   });
 });
+
+describe("operationsRepository — seed de companies a partir de src/data/content.ts", () => {
+  const companiesFile = path.join(contentDir, "companies.json");
+  const marker = path.join(contentDir, ".companies-seed-v1");
+  let backup: string | null;
+  let markerExisted: boolean;
+
+  beforeEach(async () => {
+    try {
+      backup = await fs.readFile(companiesFile, "utf8");
+    } catch {
+      backup = null;
+    }
+    markerExisted = await fs.access(marker).then(() => true).catch(() => false);
+    await fs.rm(companiesFile, { force: true });
+    await fs.rm(marker, { force: true });
+  });
+
+  afterEach(async () => {
+    if (backup !== null) await fs.writeFile(companiesFile, backup, "utf8");
+    else await fs.rm(companiesFile, { force: true });
+    if (!markerExisted) await fs.rm(marker, { force: true });
+  });
+
+  it("popula companies.json com as 6 empresas reais na primeira leitura (sem arquivo nem marcador)", async () => {
+    const { operationsRepository } = await import("./operations-repository");
+    const items = await operationsRepository.listCompanies();
+    expect(items.length).toBe(6);
+    const weg = items.find((item) => item.slug === "weg");
+    expect(weg?.website).toBe("https://www.weg.net");
+    expect(weg?.active).toBe(true);
+    const persisted = JSON.parse(await fs.readFile(companiesFile, "utf8"));
+    expect(persisted.length).toBe(6);
+  });
+});
