@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { contentRepository } from "@/services/cms";
 import { configRepository } from "@/services/config";
+import { editorialRepository } from "@/services/editorial";
 import { Hero } from "@/components/editorial/hero";
 import { FeaturedNews } from "@/components/editorial/featured-news";
 import { ArticleCard } from "@/components/editorial/article-card";
@@ -20,7 +21,13 @@ import styles from "./home.module.css";
 const safeHostname=(url:string)=>{try{return new URL(url).hostname}catch{return url}};
 
 export default async function Home(){
-  const[articles,companies,events,segmentProfiles,home,settings,radarSignals,intelligenceItems]=await Promise.all([contentRepository.listArticles(),contentRepository.listCompanies(),contentRepository.listEvents(),contentRepository.listSegmentProfiles(),configRepository.getHome(),configRepository.getSettings(),contentRepository.listPublishedRadarSignals(),contentRepository.listPublishedIntelligenceItems()]);
+  const[articles,companies,events,segmentProfiles,home,settings,radarSignals,intelligenceItems,tags]=await Promise.all([contentRepository.listArticles(),contentRepository.listCompanies(),contentRepository.listEvents(),contentRepository.listSegmentProfiles(),configRepository.getHome(),configRepository.getSettings(),contentRepository.listPublishedRadarSignals(),contentRepository.listPublishedIntelligenceItems(),editorialRepository.listTags()]);
+  // Fase 8D — RadarSignal.tagIds guarda ids reais de tags (validados
+  // server-side contra editorialRepository.listTags()), nunca nomes ou
+  // slugs — resolver aqui evita mostrar o id cru como hashtag e linkar
+  // para uma /tags/[slug] que não existe (a rota filtra por slugify(nome),
+  // não por id).
+  const tagById=new Map(tags.map(tag=>[tag.id,tag]));
   const filtered=home.latest.categoryFilter?articles.filter((article)=>article.categorySlug===home.latest.categoryFilter):articles;
   const latest=[...filtered].sort((a,b)=>home.latest.order==="popular"?(b.mostRead??0)-(a.mostRead??0):home.latest.order==="oldest"?new Date(a.publishedAt).getTime()-new Date(b.publishedAt).getTime():new Date(b.publishedAt).getTime()-new Date(a.publishedAt).getTime());
   const ranked=[...articles].sort((a,b)=>new Date(b.publishedAt).getTime()-new Date(a.publishedAt).getTime()).slice(0,5);
@@ -31,7 +38,7 @@ export default async function Home(){
 
     {home.segments.enabled&&<SegmentShowcase segments={orderedSegments} config={home.segments}/>} {home.agenda.enabled&&<AgendaShowcase events={events.filter(item=>item.showOnHome!==false).slice(0,home.agenda.eventCount)} config={home.agenda}/>} 
 
-    {home.modules.radar&&<section className={`section-tight ${styles.radar}`}><div className="container"><div className="section-head"><div><span className="eyebrow"><Zap size={12}/> Atualização contínua</span><h2 className="section-title">Radar Industrial</h2></div><Link className="section-link" href="/radar">Abrir radar →</Link></div>{radarSignals.length===0?<div className={styles.emptyState}><p>Nenhum sinal publicado no momento. O Radar Industrial só mostra sinais com evidência real, revisados e aprovados pela curadoria VTRES60.</p></div>:<div className={styles.radarGrid}><div className={styles.radarLead}><div className={styles.pulse}><span/><b>SINAL EDITORIAL</b></div><h3>{radarSignals[0].title}</h3><p>{radarSignals[0].summary}</p><div className={styles.radarTags}>{radarSignals[0].tagIds.map((tagId)=><Link key={tagId} href={`/tags/${tagId}`}>#{tagId}</Link>)}</div><div className={styles.evidenceList}><span>Evidências:</span>{radarSignals[0].sourceUrls.map((url)=><a key={url} href={url} target="_blank" rel="noopener noreferrer">{safeHostname(url)}</a>)}</div></div><div className={styles.radarList}>{radarSignals.slice(1,5).map((signal,index)=><Link href="/radar" key={signal.id}><span>{String(index+2).padStart(2,"0")}</span><div><b>{signal.title}</b><small>{signal.confidence==="alta"?"Confiança alta":signal.confidence==="média"?"Confiança média":"Confiança baixa"}</small></div><TrendingUp size={15}/></Link>)}</div></div>}</div></section>}
+    {home.modules.radar&&<section className={`section-tight ${styles.radar}`}><div className="container"><div className="section-head"><div><span className="eyebrow"><Zap size={12}/> Atualização contínua</span><h2 className="section-title">Radar Industrial</h2></div><Link className="section-link" href="/radar">Abrir radar →</Link></div>{radarSignals.length===0?<div className={styles.emptyState}><p>Nenhum sinal publicado no momento. O Radar Industrial só mostra sinais com evidência real, revisados e aprovados pela curadoria VTRES60.</p></div>:<div className={styles.radarGrid}><div className={styles.radarLead}><div className={styles.pulse}><span/><b>SINAL EDITORIAL</b></div><h3>{radarSignals[0].title}</h3><p>{radarSignals[0].summary}</p><div className={styles.radarTags}>{radarSignals[0].tagIds.map((tagId)=>{const tag=tagById.get(tagId);return tag?<Link key={tagId} href={`/tags/${tag.slug}`}>#{tag.name}</Link>:null})}</div><div className={styles.evidenceList}><span>Fontes:</span>{radarSignals[0].sourceUrls.map((url)=><a key={url} href={url} target="_blank" rel="noopener noreferrer">{safeHostname(url)}</a>)}</div></div><div className={styles.radarList}>{radarSignals.slice(1,5).map((signal,index)=><Link href="/radar" key={signal.id}><span>{String(index+2).padStart(2,"0")}</span><div><b>{signal.title}</b><small>{signal.confidence==="alta"?"Confiança alta":signal.confidence==="média"?"Confiança média":"Confiança baixa"}</small></div><TrendingUp size={15}/></Link>)}</div></div>}</div></section>}
 
     {home.modules.segmentFilter&&<SegmentSelector segments={segmentProfiles.map(item=>item.name)}/>}
 
