@@ -1,0 +1,13 @@
+.head{max-width:640px;margin-bottom:32px}
+.head h1{font-size:clamp(32px,4vw,48px);letter-spacing:-.03em;margin:12px 0}
+.head p{color:#667085;line-height:1.55}
+.empty{padding:40px;text-align:center;color:#667085;border:1px dashed var(--line);border-radius:16px}
+.grid{display:grid;gap:20px}
+.card{border:1px solid var(--line);border-radius:16px;padding:28px;background:var(--surface,#fff)}
+.card time{color:#98a2b3;font-size:11px}
+.card h2{margin:10px 0;font-size:22px}
+.evidence,.sources{margin-top:16px;font-size:12px}
+.evidence span,.sources span{display:block;color:#667085;margin-bottom:6px}
+.evidence ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px}
+.evidence a,.sources a{color:#3268bd}
+.sources{display:flex;gap:10px;flex-wrap:wrap;align-items:baseline}
