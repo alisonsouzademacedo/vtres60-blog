@@ -4,7 +4,7 @@
 **Worktree:** `/home/pedro/vtres60-blog-fase8c` (branch `fase8c-dev`, derivada de `2918b1a`)
 **Branch remota:** `feat/portal-funcional-fase8`
 **Commit inicial:** `2918b1a`
-**Commit final:** `ff9f5ba`
+**Commit final:** `17e7a58`
 **Plano executado:** `docs/superpowers/plans/2026-07-22-fase8d-radar-inteligencia-hubs.md` (16 tarefas, execução orientada por subagentes com revisão em cada uma — ver `.superpowers/sdd/progress.md` para o ledger completo)
 
 ## Metodologia
@@ -12,6 +12,8 @@
 Cada tarefa do plano foi implementada por um subagente "implementador" fresco e revisada por um subagente "revisor" independente (verificação de spec + qualidade de código), com correções aplicadas e re-revisadas até aprovação — nenhuma tarefa avançou com achado Crítico ou Importante em aberto. Duas tarefas de risco de processo (Task 13 — build/servidor isolado/Playwright/Lighthouse) foram executadas diretamente pelo controller (não por subagente) dado o histórico documentado de incidentes de `pkill` neste projeto; mesmo assim passaram pela mesma revisão de subagente independente ao final.
 
 Protocolo de evidência seguido antes de qualquer alteração: confirmado por leitura direta de código que Radar Industrial e Inteligência VTRES60 eram 100% hardcoded em `page.tsx` (sem tabela, sem tipo — `docs/auditoria-funcional-home-fase8.md` reconfirmado), que a lista de empresas era um array estático sem CRUD, e que **0 de 29 posts** publicados tinham qualquer empresa associada (consulta SQL real, mesmo após as Fases 8B/8C).
+
+Ao final das 16 tarefas, uma **revisão final de branch inteiro** (modelo mais capaz disponível, escopo cross-task — o que nenhuma revisão isolada por tarefa consegue ver) encontrou um bug real: a home renderizava `RadarSignal.tagIds` (ids reais de tags) como texto da hashtag e como slug do link, em vez de resolver para o nome/slug reais da tag — quebraria silenciosamente (link para página vazia, texto ilegível) no primeiro sinal real publicado com tags. Nenhuma das 16 revisões por tarefa pegou isso porque nenhuma exercitou a view populada da home com um sinal real contendo tags (só o estado vazio foi testado nas tarefas de home/validação). Corrigido com um `Map` de id→tag (mesmo padrão já usado em `/radar` para posts de evidência), verificado com uma fixture temporária real (nunca commitada) e re-revisado até aprovação ("Ready to merge: Yes"). Ver a seção "Bugs reais encontrados" abaixo para o registro completo.
 
 ## Arquitetura
 
@@ -74,6 +76,7 @@ Admin: `/admin/inteligencia`, com seletor de sinal real do Radar como origem obr
 4. Contraste na view populada de `.card` (`.evidence`/`.sources`) — nunca testada antes porque `radarSignals.json` não tem seed (começa vazio por design); verificada criando uma fixture temporária real (post real + source_url real), rodando axe, depois removendo a fixture — **nenhum dado fictício foi commitado**.
 5. Asserção de teste vazia (`toBeGreaterThanOrEqual(0)`, sempre verdadeira) substituída por prova real de cobertura.
 6. Gap real do plano: o gate de auto-seed em `read()` não incluía `"companies"` — sem a correção, `companies.json` nunca seria populado (achado pelo próprio implementador da Task 3, corrigido pelo controller).
+7. **Achado pela revisão final de branch inteiro (não por nenhuma das 16 revisões por tarefa):** a home resolvia `RadarSignal.tagIds` (ids reais de tags) direto como texto de hashtag e como slug de link, sem passar pelo nome/slug reais da tag — quebraria silenciosamente no primeiro sinal publicado com tags (link para página vazia via `/tags/[slug]`, que filtra por `slugify(nome)`, não por id). Corrigido resolvendo `tagId → {name, slug}` via `editorialRepository.listTags()`, mesmo padrão já usado em `/radar` para posts de evidência. Verificado com uma fixture temporária real (tag real "tag-automacao"/"Automação"/"automacao", nunca commitada): a home passou a renderizar corretamente `#Automação` linkando para `/tags/automacao`. Esse é exatamente o tipo de bug que só uma revisão de branch inteiro pega — nenhuma tarefa isolada testou a view populada da home com tags reais.
 
 **Processos:** servidor de teste isolado sempre iniciado com PID capturado explicitamente. Um incidente evitado (não ocorrido): `$!` após `npx next start &` capturou o PID do wrapper `npm exec`, não do `next-server` real que ocupava a porta — identificado antes de qualquer kill por padrão, verificado que o PID órfão pertencia ao worktree e não a nenhum processo PM2, e a técnica de início mudou para invocar `node_modules/.bin/next` diretamente. Restart counts do PM2 de produção idênticos do início ao fim da sessão: `vtres60-blog: 88`, `v360-dashboard: 95`, `vtres60-agent-worker: 1`, `vtres60: 0`.
 
@@ -81,7 +84,7 @@ Admin: `/admin/inteligencia`, com seletor de sinal real do Radar como origem obr
 
 - Radar e Inteligência estão funcionalmente completos mas **vazios em produção** até que um admin publique o primeiro sinal/item real — isso é o comportamento correto (estado vazio honesto), não um bug.
 - O teste de Hubs cobre a lógica corretamente, mas seu ramo "populado" nunca foi exercitado contra dados reais (0/29 posts com empresa) — mecânica verificada por leitura de código, não por execução real end-to-end.
-- Não existe cobertura de regressão permanente para a view populada de `/radar` (a fixture usada para achar o bug de contraste foi removida, não commitada) — um lint de contraste automatizado seria uma alternativa mais barata que dados de seed fictícios.
+- Não existe cobertura de regressão permanente para a view populada de `/radar` nem para a seção Radar da home (as fixtures usadas para achar os bugs de contraste e de resolução de tags foram removidas, não commitadas) — um teste populado de verdade (ou um lint de contraste automatizado) seria mais barato a longo prazo do que repetir esse processo manual a cada mudança futura nessas seções.
 - Monitoramento por empresa: avaliado, não implementado, follow-up bem definido (ver seção acima).
 
 ## Produção
