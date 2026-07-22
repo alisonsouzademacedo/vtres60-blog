@@ -1,6 +1,16 @@
-import type { Company, IndustrialEvent, SegmentProfile } from "@/types/content";
+import type { IndustrialEvent, SegmentProfile } from "@/types/content";
 
-export const companies: Company[] = [
+// Fase 8D — este array deixou de alimentar contentRepository.listCompanies()
+// (que agora lê de operationsRepository.listCompanies(), com cobertura real
+// calculada a partir de posts). Ele sobrevive só como seed inicial da
+// coleção "companies" (ver operations-repository.ts) e como fonte de nomes
+// para o mapeamento de taxonomia do agente (taxonomies.ts, que usa só
+// .name) — por isso não usa mais o tipo público Company, que agora exige
+// campos (hasCoverage/postCount/active/featured/website) que não fazem
+// sentido inventar aqui.
+type LegacyCompanySeed = { name: string; slug: string; ticker?: string; sector: string; description: string; accent: string };
+
+export const companies: LegacyCompanySeed[] = [
   { name: "WEG", slug: "weg", ticker: "WEGE3", sector: "Tecnologia industrial", description: "Motores, energia, automação e transformação industrial.", accent: "#3185ff" },
   { name: "Gerdau", slug: "gerdau", ticker: "GGBR4", sector: "Siderurgia", description: "Aço, construção, mobilidade e economia circular.", accent: "#7c65ff" },
   { name: "Marcopolo", slug: "marcopolo", ticker: "POMO4", sector: "Mobilidade", description: "Transporte coletivo, manufatura e mercados globais.", accent: "#36c4a1" },

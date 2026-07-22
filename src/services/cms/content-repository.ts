@@ -1,4 +1,5 @@
 import type { Article, Company, IndustrialEvent, SegmentProfile } from "@/types/content";
+import type { RadarSignal, IntelligenceItem } from "@/types/operations";
 
 export interface ContentRepository {
   listArticles(): Promise<Article[]>;
@@ -8,4 +9,6 @@ export interface ContentRepository {
   listEvents(): Promise<IndustrialEvent[]>;
   listSegments(): Promise<string[]>;
   listSegmentProfiles(): Promise<SegmentProfile[]>;
+  listPublishedRadarSignals(): Promise<RadarSignal[]>;
+  listPublishedIntelligenceItems(): Promise<IntelligenceItem[]>;
 }

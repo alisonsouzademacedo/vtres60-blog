@@ -48,6 +48,11 @@ export interface Company {
   sector: string;
   description: string;
   accent: string;
+  hasCoverage: boolean;
+  postCount: number;
+  active: boolean;
+  featured: boolean;
+  website: string;
 }
 
 export interface IndustrialEvent {
