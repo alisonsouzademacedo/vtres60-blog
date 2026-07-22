@@ -29,12 +29,26 @@ test.describe("Hubs de empresas (público)", () => {
   test("Home só destaca empresas com cobertura real (nunca uma sem post publicado)", async ({ page }) => {
     await page.goto(withBasePath("/"));
     const companiesSection = page.locator("section", { hasText: "Hubs editoriais" });
-    if (await companiesSection.count()) {
-      const cards = companiesSection.locator(`a[href^="${withBasePath("/empresas/")}"]`);
-      // Cada card visível precisa corresponder a uma empresa com pelo menos
-      // um post real — verificado indiretamente: a seção some inteiramente
-      // quando data-hasCoverage é falso para todas (ver Task 10's emptyState).
-      expect(await cards.count()).toBeGreaterThanOrEqual(0);
+    await expect(companiesSection).toBeVisible();
+    const cards = companiesSection.locator(`a[href^="${withBasePath("/empresas/")}"]`);
+    const cardCount = await cards.count();
+    if (cardCount === 0) {
+      // Nenhum post publicado tem empresa associada hoje (0/29 confirmado
+      // via SQL na Fase 8D) — a home deve mostrar o estado vazio honesto,
+      // nunca a lista inteira de empresas sem filtro de cobertura.
+      await expect(companiesSection.getByText("Nenhuma empresa com cobertura editorial")).toBeVisible();
+    } else {
+      // Prova real de cobertura, não apenas confiança na filtragem client-side:
+      // cada card visível precisa levar a um hub que realmente tem pelo menos
+      // um artigo — nunca uma empresa "destacada" sem nenhuma matéria real.
+      for (let i = 0; i < cardCount; i++) {
+        const href = await cards.nth(i).getAttribute("href");
+        expect(href).toBeTruthy();
+        const hubPage = await page.context().newPage();
+        await hubPage.goto(href!);
+        await expect(hubPage.locator("article, a[href*='/noticias/']").first()).toBeVisible();
+        await hubPage.close();
+      }
     }
   });
 });
