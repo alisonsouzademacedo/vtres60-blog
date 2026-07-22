@@ -14,4 +14,6 @@ export function CrudList({initial,basePath,apiPath,createLabel,entityName,femini
 // Fase 8C — statusLabel tambem cobre o ciclo de vida de eventos da
 // Agenda (candidate/verified/published/archived/cancelled), alem dos
 // status de posts editoriais (published/scheduled/draft) ja existentes.
-const statusLabel=(status:string)=>({published:"Publicado",scheduled:"Agendado",candidate:"Candidato",verified:"Verificado",archived:"Arquivado",cancelled:"Cancelado"}[status]??"Rascunho");
+// Fase 8D — acrescenta o ciclo de vida de Radar/Inteligência
+// (draft/reviewed/published/expired/rejected).
+const statusLabel=(status:string)=>({published:"Publicado",scheduled:"Agendado",candidate:"Candidato",verified:"Verificado",archived:"Arquivado",cancelled:"Cancelado",draft:"Rascunho",reviewed:"Revisado",expired:"Expirado",rejected:"Rejeitado"}[status]??"Rascunho");

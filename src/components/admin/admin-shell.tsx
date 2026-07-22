@@ -2,7 +2,7 @@
 import { withBasePath } from "@/lib/paths";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Activity, BookOpen, Bot, CalendarDays, DatabaseBackup, DollarSign, ExternalLink, FolderOpen, Home, Image, Images, LayoutDashboard, LogOut, Mail, Newspaper, Palette, Search, Settings, Star, Tag, Tags, Users } from "lucide-react";
+import { Activity, BookOpen, Bot, BrainCircuit, Building2, CalendarDays, DatabaseBackup, DollarSign, ExternalLink, FolderOpen, Home, Image, Images, LayoutDashboard, LogOut, Mail, Newspaper, Palette, Radar, Search, Settings, Star, Tag, Tags, Users } from "lucide-react";
 
 const groups = [
   { label: "Geral", links: [
@@ -17,6 +17,7 @@ const groups = [
     ["Home", "/admin/home", Home], ["Hero", "/admin/hero", Image], ["Destaque Editorial", "/admin/destaque-editorial", Star],
     ["Últimas Notícias", "/admin/ultimas-noticias", Newspaper], ["Segmentos Industriais", "/admin/segmentos", Tags],
     ["Agenda Industrial", "/admin/agenda", CalendarDays], ["Newsletter", "/admin/newsletter", Mail],
+    ["Empresas", "/admin/empresas", Building2], ["Radar Industrial", "/admin/radar", Radar], ["Inteligência VTRES60", "/admin/inteligencia", BrainCircuit],
   ] },
   { label: "Operação", links: [
     ["Agente Autônomo", "/admin/agente", Bot], ["Custos e APIs", "/admin/custos", DollarSign],
