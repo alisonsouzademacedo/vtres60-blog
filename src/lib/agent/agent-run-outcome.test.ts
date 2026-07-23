@@ -5,6 +5,13 @@ import { describe, expect, it, vi } from "vitest";
 // pelo mesmo motivo de drafter.test.ts (evita a cadeia de import derrubar
 // o teste), mesmo essa suite nunca chamando recordProviderUsage.
 vi.mock("./costs/usage-repository", () => ({ recordProviderUsage: vi.fn() }));
+// Fase 9B.0 — mesmo mock minimo do circuit breaker, ver drafter.test.ts.
+vi.mock("./budget/circuit-breaker", () => ({
+  checkAndReserveBudget: vi.fn().mockResolvedValue({ allowed: true, mode: "DISABLED" }),
+  reconcileBudget: vi.fn(),
+  releaseBudget: vi.fn(),
+  BudgetExceededError: class BudgetExceededError extends Error {},
+}));
 import type { AgentState } from "./state";
 import { deriveRunOutcome } from "./agent-run-outcome";
 

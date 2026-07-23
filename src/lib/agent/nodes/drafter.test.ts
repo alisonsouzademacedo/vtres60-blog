@@ -17,6 +17,15 @@ vi.mock("@/services/operations", () => ({
 // pelo mesmo motivo do mock de editorial acima: so para permitir importar
 // o modulo em teste, sem exercitar a chamada de fato.
 vi.mock("@/lib/agent/costs/usage-repository", () => ({ recordProviderUsage: vi.fn() }));
+// Fase 9B.0 — costs/record-llm-usage.ts (importado transitivamente por
+// drafter.ts) agora importa budget/circuit-breaker.ts, que tambem importa
+// @/lib/supabase — mesmo mock minimo pelo mesmo motivo dos acima.
+vi.mock("@/lib/agent/budget/circuit-breaker", () => ({
+  checkAndReserveBudget: vi.fn().mockResolvedValue({ allowed: true, mode: "DISABLED" }),
+  reconcileBudget: vi.fn(),
+  releaseBudget: vi.fn(),
+  BudgetExceededError: class BudgetExceededError extends Error {},
+}));
 
 import { DraftSchema } from "./drafter";
 

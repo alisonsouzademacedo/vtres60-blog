@@ -1,5 +1,6 @@
 import { AdminPageHeading } from "@/components/admin/page-heading";
 import { CostsPanel } from "@/components/admin/costs-panel";
+import { BudgetPanel } from "@/components/admin/budget-panel";
 import { listUsageSince } from "@/lib/agent/costs/usage-repository";
 import { listRecentRuns } from "@/lib/agent/agent-runs-repository";
 import {
@@ -14,6 +15,7 @@ import {
 import { listActiveBudgets, listManualPrices, listCurrencyRates } from "@/lib/agent/costs/cost-settings-repository";
 import { calculateEstimatedBalance } from "@/lib/agent/costs/estimated-balance";
 import { getCachedProviderHealth } from "@/lib/agent/health/provider-health";
+import { listBudgetModes, listBudgetThresholds, listBudgetSpend, listRecentBudgetBlocks } from "@/lib/agent/budget/budget-repository";
 import { CostSettingsForm } from "@/components/admin/cost-settings-form";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -23,15 +25,22 @@ export default async function CustosPage() {
   const since7d = new Date(now - 7 * DAY_MS).toISOString();
   const since30d = new Date(now - 30 * DAY_MS).toISOString();
 
-  const [usage7d, usage30d, runs30d, budgets, manualPrices, currencyRates, health] = await Promise.all([
-    listUsageSince(since7d).catch(() => null),
-    listUsageSince(since30d).catch(() => null),
-    listRecentRuns(500).catch(() => null),
-    listActiveBudgets().catch(() => []),
-    listManualPrices().catch(() => []),
-    listCurrencyRates().catch(() => []),
-    getCachedProviderHealth().catch(() => ({ providers: [], cached: false })),
-  ]);
+  const [usage7d, usage30d, runs30d, budgets, manualPrices, currencyRates, health, budgetModes, budgetThresholds, budgetSpend, recentBudgetBlocks] =
+    await Promise.all([
+      listUsageSince(since7d).catch(() => null),
+      listUsageSince(since30d).catch(() => null),
+      listRecentRuns(500).catch(() => null),
+      listActiveBudgets().catch(() => []),
+      listManualPrices().catch(() => []),
+      listCurrencyRates().catch(() => []),
+      getCachedProviderHealth().catch(() => ({ providers: [], cached: false })),
+      listBudgetModes().catch(() => null),
+      listBudgetThresholds().catch(() => []),
+      listBudgetSpend().catch(() => []),
+      listRecentBudgetBlocks().catch(() => []),
+    ]);
+
+  const budgetGuardAvailable = budgetModes !== null;
 
   const telemetryAvailable = usage7d !== null && usage30d !== null;
   const rows7d = usage7d ?? [];
@@ -110,6 +119,13 @@ export default async function CustosPage() {
         estimatedBalances={estimatedBalances}
         degradedProviders={degradedProviders.map((provider) => ({ provider: provider.provider, status: provider.status, detail: provider.detail }))}
         manualPricesCount={manualPrices.length}
+      />
+      <BudgetPanel
+        available={budgetGuardAvailable}
+        modes={budgetModes ?? []}
+        thresholds={budgetThresholds}
+        spend={budgetSpend}
+        recentBlocks={recentBudgetBlocks}
       />
       <section className="admin-card">
         <header>

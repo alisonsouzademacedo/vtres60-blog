@@ -3,6 +3,7 @@ import { z } from "zod";
 import { llm } from "../llm";
 import { invokeWithUsageTelemetry } from "../costs/record-llm-usage";
 import { recordProviderUsage } from "../costs/usage-repository";
+import { checkAndReserveBudget, reconcileBudget, releaseBudget } from "../budget/circuit-breaker";
 import type { AgentState, AgentStateUpdate } from "../state";
 
 interface GNewsArticle {
@@ -35,6 +36,30 @@ async function searchGNews(runId: string | undefined): Promise<GNewsArticle[]> {
   if (!apiKey) return [];
 
   const startedAt = new Date().toISOString();
+
+  // Fase 9B.0 — GNews nao tem custo monetario confirmado (plano
+  // free-tier/quota, "unavailable" sempre — ver pricing.ts), entao
+  // estimatedCost=0 aqui. A reserva ainda serve para futura contagem de
+  // REQUEST_QUOTA quando a cota numerica real for confirmada (Fase 9A:
+  // hoje indisponivel, nao estimavel). Bloqueio em ENFORCE degrada
+  // graciosamente como "zero artigos" — o mesmo comportamento ja usado
+  // para falha de rede/timeout, nunca lanca excecao aqui.
+  const reservation = await checkAndReserveBudget({ provider: "gnews", operation: "news_search", estimatedCost: 0, runId });
+  if (!reservation.allowed) {
+    await recordProviderUsage({
+      runId,
+      provider: "gnews",
+      operation: "news_search",
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      costStatus: "unavailable",
+      success: false,
+      errorCode: "BudgetExceededError",
+      errorMessage: `Bloqueado pelo circuit breaker de orçamento: ${reservation.reason}`,
+    }).catch(() => undefined);
+    return [];
+  }
+
   try {
     const response = await axios.get<GNewsSearchResponse>("https://gnews.io/api/v4/search", {
       params: {
@@ -68,8 +93,10 @@ async function searchGNews(runId: string | undefined): Promise<GNewsArticle[]> {
       costStatus: "unavailable",
       success: true,
     }).catch(() => undefined);
+    await reconcileBudget(reservation.reservationId, 0);
     return response.data.articles ?? [];
   } catch (error) {
+    await releaseBudget(reservation.reservationId);
     const finishedAt = new Date().toISOString();
     const timedOut = axios.isAxiosError(error) && error.code === "ECONNABORTED";
     await recordProviderUsage({

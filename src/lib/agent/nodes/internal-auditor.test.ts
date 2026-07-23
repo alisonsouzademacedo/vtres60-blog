@@ -16,6 +16,13 @@ vi.mock("@/services/editorial", () => ({
   },
 }));
 vi.mock("../costs/usage-repository", () => ({ recordProviderUsage: vi.fn().mockResolvedValue(undefined) }));
+// Fase 9B.0 — mesmo mock minimo do circuit breaker, ver drafter.test.ts.
+vi.mock("../budget/circuit-breaker", () => ({
+  checkAndReserveBudget: vi.fn().mockResolvedValue({ allowed: true, mode: "DISABLED" }),
+  reconcileBudget: vi.fn(),
+  releaseBudget: vi.fn(),
+  BudgetExceededError: class BudgetExceededError extends Error {},
+}));
 
 import type { AgentState } from "../state";
 import { internalAuditorNode } from "./internal-auditor";

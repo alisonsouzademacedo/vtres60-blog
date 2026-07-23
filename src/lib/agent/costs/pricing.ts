@@ -149,3 +149,29 @@ export const SUPABASE_STORAGE_PLAN_REFERENCE = {
   verified: true,
   lastVerifiedAt: "2026-07-15",
 };
+
+// Fase 9B.0 — estimativas PRE-chamada para o circuit breaker de
+// orcamento. Nao confundir com o custo real gravado em
+// agent_provider_usage (Secao 8, calculado DEPOIS da chamada a partir do
+// usage_metadata real). O guard precisa de um numero ANTES de gastar, pra
+// decidir se reserva ou bloqueia — a reserva e sempre reconciliada com o
+// custo real assim que a chamada termina (reserve -> executar -> conciliar).
+//
+// Valores de draft_generation/internal_audit/news_pick/newsworthiness sao
+// a media real observada nas 5 execucoes completas do agente desde que a
+// telemetria existe (Fase 7, 2026-07-20 a 22), consultada ao vivo via
+// Supabase MCP na auditoria da Fase 9A — nao inventados. semantic_dedupe
+// NAO tem amostra real (nenhuma linha de agent_provider_usage com essa
+// operation nas 45 amostradas) — o valor abaixo e um placeholder
+// conservador na mesma ordem de grandeza de internal_audit (compara dois
+// textos, operacao semelhante), explicitamente marcado `confirmed:false`.
+// Como nenhum modo ENFORCE tem teto aprovado ainda (Fase 9A: nenhum valor
+// de orcamento foi aprovado por Pedro), esse placeholder so afeta a soma
+// exibida no modo AUDIT hoje, nunca bloqueia nada.
+export const DEFAULT_OPENAI_OPERATION_COST_ESTIMATES: Record<string, { costUsd: number; confirmed: boolean }> = {
+  draft_generation: { costUsd: 0.015, confirmed: true },
+  internal_audit: { costUsd: 0.0074, confirmed: true },
+  news_pick: { costUsd: 0.0021, confirmed: true },
+  newsworthiness: { costUsd: 0.0044, confirmed: true },
+  semantic_dedupe: { costUsd: 0.0074, confirmed: false },
+};

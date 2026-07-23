@@ -1,6 +1,8 @@
 import axios from "axios";
 import { calculateReplicateImageCost } from "../costs/calculate-cost";
+import { findModelPrice } from "../costs/pricing";
 import { recordProviderUsage } from "../costs/usage-repository";
+import { checkAndReserveBudget, reconcileBudget, releaseBudget } from "../budget/circuit-breaker";
 
 export interface PexelsCandidate {
   url: string; // src.original — maior resolucao disponivel para download/QA
@@ -23,6 +25,26 @@ export async function fetchPexelsCandidates(keyword: string, runId?: string): Pr
   const apiKey = process.env.PEXELS_API_KEY;
   if (!apiKey || !keyword) return [];
   const startedAt = new Date().toISOString();
+
+  // Fase 9B.0 — Pexels sem custo monetario confirmado (free tier,
+  // "unavailable" — mesma razao do GNews). Bloqueio degrada graciosamente
+  // pra lista vazia, ImageProcessor ja cai pro tier seguinte (placeholder).
+  const reservation = await checkAndReserveBudget({ provider: "pexels", operation: "pexels_search", estimatedCost: 0, runId });
+  if (!reservation.allowed) {
+    await recordProviderUsage({
+      runId,
+      provider: "pexels",
+      operation: "pexels_search",
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      costStatus: "unavailable",
+      success: false,
+      errorCode: "BudgetExceededError",
+      errorMessage: `Bloqueado pelo circuit breaker de orçamento: ${reservation.reason}`,
+    }).catch(() => undefined);
+    return [];
+  }
+
   try {
     const response = await axios.get("https://api.pexels.com/v1/search", {
       params: { query: keyword, per_page: PEXELS_CANDIDATE_COUNT, orientation: "landscape" },
@@ -47,6 +69,7 @@ export async function fetchPexelsCandidates(keyword: string, runId?: string): Pr
       costStatus: "unavailable",
       success: true,
     }).catch(() => undefined);
+    await reconcileBudget(reservation.reservationId, 0);
     return photos
       .map((photo: Record<string, unknown>) => {
         const src = photo.src as Record<string, unknown> | undefined;
@@ -61,6 +84,7 @@ export async function fetchPexelsCandidates(keyword: string, runId?: string): Pr
       })
       .filter((candidate: PexelsCandidate | undefined): candidate is PexelsCandidate => Boolean(candidate));
   } catch (error) {
+    await releaseBudget(reservation.reservationId);
     const finishedAt = new Date().toISOString();
     await recordProviderUsage({
       runId,
@@ -113,6 +137,31 @@ export async function generateWithReplicate(prompt: string, runId?: string): Pro
 
   const startedAt = new Date().toISOString();
   let predictionId: string | undefined;
+
+  // Fase 9B.0 — Replicate tem preco confirmado ($0,003/imagem,
+  // verificado ao vivo em 15/07/2026, ver pricing.ts). Estimativa
+  // pre-chamada usa esse preco cheio (o custo real so cai pra 0 se a
+  // predicao falhar, reconciliado depois via calculateReplicateImageCost
+  // ja existente). Bloqueio degrada graciosamente pra undefined —
+  // ImageProcessor ja cai pro tier Pexels nesse caso.
+  const replicatePrice = findModelPrice("replicate", "black-forest-labs/flux-schnell", "per_image")?.price ?? 0;
+  const reservation = await checkAndReserveBudget({ provider: "replicate", operation: "image_generation", estimatedCost: replicatePrice, runId });
+  if (!reservation.allowed) {
+    await recordProviderUsage({
+      runId,
+      provider: "replicate",
+      operation: "image_generation",
+      model: REPLICATE_MODEL,
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      costStatus: "unavailable",
+      success: false,
+      errorCode: "BudgetExceededError",
+      errorMessage: `Bloqueado pelo circuit breaker de orçamento: ${reservation.reason}`,
+    }).catch(() => undefined);
+    return undefined;
+  }
+
   try {
     const { data: prediction } = await axios.post<ReplicatePrediction>(
       "https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions",
@@ -162,9 +211,11 @@ export async function generateWithReplicate(prompt: string, runId?: string): Pro
       errorCode: succeeded ? undefined : "PredictionNotSucceeded",
       errorMessage: succeeded ? undefined : (current.error ?? `status=${current.status}`)?.slice(0, 500),
     }).catch(() => undefined);
+    await reconcileBudget(reservation.reservationId, cost.costUsd ?? 0);
 
     return succeeded ? extractReplicateUrl(current.output) : undefined;
   } catch (error) {
+    await releaseBudget(reservation.reservationId);
     const finishedAt = new Date().toISOString();
     const status = axios.isAxiosError(error) ? error.response?.status : undefined;
     // 402 = sem credito (Fase 6 confirmou esse estado para esta conta) —
