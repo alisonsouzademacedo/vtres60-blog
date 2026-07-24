@@ -95,17 +95,64 @@ Lint limpo (`eslint . --max-warnings=0`). Typecheck limpo (`tsc --noEmit`). Vite
 
 ## Produção
 
-`PRODUCTION_CHANGED=false`. Nenhuma alteração em `/home/pedro/vtres60-blog`. Nenhuma migration aplicada a nenhum banco. Todo o trabalho desta fase ocorreu em `/home/pedro/vtres60-blog-fase9b0` (branch `feat/budget-enforcement-fase9`).
+`PRODUCTION_CHANGED=false`. Nenhuma alteração em `/home/pedro/vtres60-blog`. Nenhuma migration aplicada a nenhum banco de produção. Todo o trabalho desta fase ocorreu em `/home/pedro/vtres60-blog-fase9b0` (branch `feat/budget-enforcement-fase9`).
 
-## Flags finais
+---
+
+## Fechamento (2026-07-24) — validação real de atomicidade e do BudgetPanel
+
+Duas pendências identificadas ao fim da implementação inicial: (1) a atomicidade só tinha sido validada com mocks TypeScript, nunca contra Postgres real sob concorrência; (2) o `BudgetPanel` mudou a UI de `/admin/custos` sem passar por Playwright/axe. Ambas fechadas nesta etapa, sem tocar produção.
+
+### Validação real das RPCs — Postgres isolado
+
+Container Docker descartável (`postgres:17`, porta `55499`, nome `vtres60-fase9b0-pg-test`), **isolado tanto da produção quanto de outro container já em uso por outro projeto neste servidor** (`v360-fase5-db-lab`, porta `55432` — não reaproveitado, para não misturar dados de projetos diferentes). Migration aplicada com um stub mínimo de `agent_runs (id uuid primary key)` só para satisfazer a FK de `budget_reservations.run_id` (nenhum outro dado inventado).
+
+Confirmado via schema real (`\d`, `pg_policies`, `pg_class`): RLS habilitado nas 4 tabelas, zero policies (deny-all, mesmo padrão de todo o projeto), constraints/índices/tipos batem exatamente com o design.
+
+**Teste de concorrência real (não simulado com mock)**: modo `ENFORCE` + teto diário de US$10,00 (valor de teste, nunca gravado em produção); duas transações `psql` disparadas verdadeiramente em paralelo (`&` + `wait`, dois processos Docker separados), cada uma pedindo reservar US$6,00 (juntas excedem o teto). Resultado real:
+```
+Transação A: {"allowed": false, "reason": "daily_budget_exceeded", "daily_spent": 6.00, ...}
+Transação B: {"allowed": true, "reservation_id": "8bd4a185-...", "daily_spent": 0, ...}
+```
+Exatamente uma reserva foi gravada (`select sum(estimated_cost) from budget_reservations` = US$6,00 — nunca 12,00, nunca dupla reserva). Repetido com 5 chamadas verdadeiramente concorrentes ao mesmo provider (`daily_spent` observado sequencialmente 0/1/2/3/4, 5 reservas distintas, soma exata US$5,00, 0,415s total) — confirma serialização correta sob carga sem deadlock nem timeout (arquiteturalmente, deadlock é impossível neste design: cada chamada mantém no máximo um lock de linha por vez, nunca dois simultâneos).
+
+Demais cenários exigidos, todos executados contra o Postgres real (não mockados):
+- **Reconciliação com custo real menor** que a estimativa (US$6,00 → US$0,0012): confirmado.
+- **Reconciliação com custo real maior** (US$0 → US$0,45): confirmado.
+- **Idempotência**: reconciliar a mesma reserva duas vezes com valores diferentes não altera o segundo valor (guarda `where status='reserved'` impede sobrescrita pós-confirmação); liberar (`release`) a mesma reserva duas vezes não lança erro nem reverte o estado.
+- **Liberação**: `status` vira `released`, sem custo.
+- **Expiração**: uma reserva `reserved` há mais de 5 minutos foi corretamente ignorada no cálculo de gasto acumulado (testado com `reserved_at` retroagido manualmente) — uma nova reserva que dependeria dela ter expirado foi aprovada corretamente.
+- **Falha no meio da função / rollback**: uma chamada com `provider` inválido violou o `CHECK` constraint dentro do `INSERT`; a transação da função inteira reverteu atomicamente, zero linhas órfãs (`count(*)` antes = depois = 0).
+- **Precisão decimal**: valores fracionários realistas de custo de LLM (`0.0000875` reservado, reconciliado para `0.0000912345`) preservados exatamente — `numeric` do Postgres não arredonda.
+- **ID inexistente**: `reconcile`/`release` numa reserva que não existe não lança erro, não afeta linhas (mesmo comportamento best-effort do lado TypeScript).
+
+**Limitação que permanece, honestamente**: este Postgres isolado não tem PostgREST na frente (só testa as funções SQL diretamente via `psql`, não via `supabaseAdmin.rpc()` real sobre HTTP) — a integração TypeScript↔RPC continua coberta só pelos mocks descritos na seção de testes acima. A camada SQL em si (onde mora toda a lógica de atomicidade) agora está provada contra Postgres real, não mock.
+
+Container descartável, encerrado e removido ao final desta etapa — nenhum dado de teste, nenhum vestígio, nenhuma alteração em produção ou em qualquer outro projeto deste servidor.
+
+### BudgetPanel — Playwright + axe
+
+Descoberta arquitetural relevante: `/admin/__test-fixtures__` (localização original planejada) nunca teria virado rota real — o Next.js App Router trata qualquer segmento de path iniciado por `_` como "pasta privada", excluída do roteamento por convenção. Corrigido movendo o harness para `/e2e-fixtures/budget-panel` (fora de `/admin/*`, evitando também o middleware de autenticação que exige cookie de sessão para qualquer path sob `/admin/:path*` — o harness não precisa herdar essa exigência, já que só renderiza o componente puro). Gate de segurança: `notFound()` a menos que `PLAYWRIGHT_TEST_FIXTURES==="1"`, nunca setado em produção.
+
+Cobertos via fixtures (6 cenários) + contra o `/admin/custos` real (autenticado, produção-equivalente): DISABLED, AUDIT com teto configurado, ENFORCE com bloqueios reais listados, configuração ausente ("Nenhum aprovado", nunca um valor inventado), sem reservas/sem bloqueios (estado vazio honesto), tabelas indisponíveis (estado real hoje, migration não aplicada), cenário inexistente (404 real), navegação por teclado, responsividade (375px sem overflow), ausência de secrets/API keys/JWT/e-mail em qualquer cenário. Usuário não autenticado: teste direto contra `/admin/custos` real confirma redirecionamento para `/admin/login` (mesma proteção de todo `/admin/*`).
+
+**Achado real durante esta validação, não relacionado ao BudgetPanel**: ao adicionar `/admin/custos` à suíte axe (nunca coberta antes desta fase), 2 violações P0/P1 apareceram — `label`/`select-name` (Form elements must have labels). Causa raiz confirmada por leitura direta do código: em `cost-settings-form.tsx` (componente pré-existente, não tocado por esta fase até este achado), todo par `<label>Texto</label>` + `<select>`/`<input>` estava estruturado como irmãos no DOM, sem `htmlFor`/`id` nem wrapping — sem associação programática nenhuma entre rótulo e controle, invisível para leitores de tela apesar de parecer correto visualmente. Corrigido envolvendo cada controle dentro do seu `<label>` (associação implícita, sem precisar de `id` — evita colisão de IDs duplicados, já que "Provider"/"Moeda"/"Nota" se repetem em 3 sub-formulários na mesma página). 16 pares corrigidos. Confirmado via axe real: 0 violações P0/P1 após o fix. Bug pré-existente, exposto só porque esta fase estendeu a cobertura de acessibilidade a uma página que nunca tinha sido auditada — mesmo padrão já visto em fases anteriores deste projeto (ex: Fase 8D encontrou e corrigiu bugs reais fora do escopo direto da tarefa, achados só por execução genuína, não por revisão de código).
+
+### Regressão
+
+Lint limpo, typecheck limpo, Vitest 551/2 skipped (idêntico ao fechamento anterior — nenhum teste novo de unidade nesta etapa, só e2e), build de produção limpo (2 vezes, antes e depois do fix de acessibilidade), 23/23 Playwright (16 fixtures + 3 admin.spec.ts estendidos + 3 axe.spec.ts admin, incluindo `/admin/custos` agora limpo), secrets scan limpo (diff completo revisado, `.env.local`/`.env.production` copiados só para build/teste, removidos logo após, nunca commitados).
+
+### Flags atualizadas
 
 ```text
 BUDGET_ARCHITECTURE_VALID=true
+BUDGET_IMPLEMENTATION_READY=true
 ATOMIC_ENFORCEMENT_READY=true
+ATOMIC_ENFORCEMENT_PENDING_DATABASE_VALIDATION=false
 AUDIT_MODE_READY=true
 ENFORCE_MODE_READY=true
 THRESHOLDS_CONFIGURED=false
 BUDGET_ENFORCEMENT_DEPLOYED=false
 ```
 
-`THRESHOLDS_CONFIGURED=false` não bloqueia a Fase 9B.1 (per o plano mestre — a estrutura está pronta, nenhum valor foi inventado). `BUDGET_ENFORCEMENT_DEPLOYED` só vira `true` numa fase de deploy dedicada (migration aplicada + validação em produção), fora do escopo desta fase.
+`ATOMIC_ENFORCEMENT_READY` passa a `true` com base em evidência real (Postgres isolado, não mock) — critério da Seção 4 do plano de fechamento satisfeito integralmente. `THRESHOLDS_CONFIGURED` permanece `false`: nenhum valor de orçamento foi aprovado por Pedro, nenhum foi inventado. `READY_FOR_DEPLOY` permanece `false` — migration segue não aplicada em produção.

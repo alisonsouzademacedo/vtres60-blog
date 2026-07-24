@@ -1,6 +1,8 @@
 # Runbook — Circuit Breaker de Orçamento (Fase 9B.0)
 
-Guia operacional para o dia a dia do controle de orçamento. Ver `docs/implementacao-fase9b0-controle-orcamento.md` para o racional arquitetural completo.
+Guia operacional para o dia a dia do controle de orçamento. Ver `docs/implementacao-fase9b0-controle-orcamento.md` para o racional arquitetural completo (inclui, na seção "Fechamento", os resultados reais da validação de concorrência contra Postgres isolado — não apenas mocks).
+
+**Atualizado em 2026-07-24**: a atomicidade das RPCs (`reserve_provider_budget`/`reconcile_provider_budget`/`release_provider_budget`) foi comprovada contra um Postgres real sob concorrência de verdade (não simulação), incluindo o cenário que mais importa para este runbook: duas chamadas simultâneas cuja soma excede o teto nunca resultam em dupla aprovação — sempre exatamente uma é bloqueada. Isso não muda nenhuma instrução operacional abaixo, só aumenta a confiança de que elas vão se comportar como descrito quando a migration for aplicada.
 
 ## Onde ver o estado atual
 

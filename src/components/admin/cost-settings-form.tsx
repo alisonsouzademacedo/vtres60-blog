@@ -119,56 +119,76 @@ function ManualPricesSection({ initial }: { initial: ManualPriceEntry[] }) {
         </p>
         <div className="admin-fields">
           <div className="admin-field">
-            <label>Provider</label>
-            <select value={form.provider} onChange={(e) => setForm({ ...form, provider: e.target.value as UsageProvider })}>
-              {PROVIDERS.map((provider) => (
-                <option key={provider} value={provider}>
-                  {PROVIDER_LABELS[provider]}
-                </option>
-              ))}
-            </select>
+            <label>
+              Provider
+              <select value={form.provider} onChange={(e) => setForm({ ...form, provider: e.target.value as UsageProvider })}>
+                {PROVIDERS.map((provider) => (
+                  <option key={provider} value={provider}>
+                    {PROVIDER_LABELS[provider]}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
           <div className="admin-field">
-            <label>Modelo</label>
-            <input value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} placeholder="gpt-4o, sdxl, ..." />
+            <label>
+              Modelo
+              <input value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} placeholder="gpt-4o, sdxl, ..." />
+            </label>
           </div>
           <div className="admin-field">
-            <label>Unidade</label>
-            <select value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })}>
-              {UNITS.map((unit) => (
-                <option key={unit.value} value={unit.value}>
-                  {unit.label}
-                </option>
-              ))}
-            </select>
+            <label>
+              Unidade
+              <select value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })}>
+                {UNITS.map((unit) => (
+                  <option key={unit.value} value={unit.value}>
+                    {unit.label}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
           <div className="admin-field">
-            <label>Custo — entrada</label>
-            <input type="number" step="0.0001" min="0" value={form.inputCost} onChange={(e) => setForm({ ...form, inputCost: e.target.value })} />
+            <label>
+              Custo — entrada
+              <input type="number" step="0.0001" min="0" value={form.inputCost} onChange={(e) => setForm({ ...form, inputCost: e.target.value })} />
+            </label>
           </div>
           <div className="admin-field">
-            <label>Custo — saída</label>
-            <input type="number" step="0.0001" min="0" value={form.outputCost} onChange={(e) => setForm({ ...form, outputCost: e.target.value })} />
+            <label>
+              Custo — saída
+              <input type="number" step="0.0001" min="0" value={form.outputCost} onChange={(e) => setForm({ ...form, outputCost: e.target.value })} />
+            </label>
           </div>
           <div className="admin-field">
-            <label>Custo — imagem</label>
-            <input type="number" step="0.0001" min="0" value={form.imageComputeCost} onChange={(e) => setForm({ ...form, imageComputeCost: e.target.value })} />
+            <label>
+              Custo — imagem
+              <input type="number" step="0.0001" min="0" value={form.imageComputeCost} onChange={(e) => setForm({ ...form, imageComputeCost: e.target.value })} />
+            </label>
           </div>
           <div className="admin-field">
-            <label>Moeda</label>
-            <input value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} placeholder="USD" />
+            <label>
+              Moeda
+              <input value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} placeholder="USD" />
+            </label>
           </div>
           <div className="admin-field">
-            <label>Vigente desde</label>
-            <input type="date" value={form.effectiveFrom} onChange={(e) => setForm({ ...form, effectiveFrom: e.target.value })} />
+            <label>
+              Vigente desde
+              <input type="date" value={form.effectiveFrom} onChange={(e) => setForm({ ...form, effectiveFrom: e.target.value })} />
+            </label>
           </div>
           <div className="admin-field">
-            <label>Fonte</label>
-            <input value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="URL da documentação, se houver" />
+            <label>
+              Fonte
+              <input value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="URL da documentação, se houver" />
+            </label>
           </div>
           <div className="admin-field admin-field-full">
-            <label>Nota</label>
-            <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="Origem do valor, contexto, data de checagem manual..." />
+            <label>
+              Nota
+              <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="Origem do valor, contexto, data de checagem manual..." />
+            </label>
           </div>
         </div>
         <div className="admin-savebar">
@@ -262,30 +282,40 @@ function BudgetsSection({ initial }: { initial: BudgetEntry[] }) {
         </p>
         <div className="admin-fields">
           <div className="admin-field">
-            <label>Provider</label>
-            <select value={form.provider} onChange={(e) => setForm({ ...form, provider: e.target.value as UsageProvider })}>
-              {PROVIDERS.map((provider) => (
-                <option key={provider} value={provider}>
-                  {PROVIDER_LABELS[provider]}
-                </option>
-              ))}
-            </select>
+            <label>
+              Provider
+              <select value={form.provider} onChange={(e) => setForm({ ...form, provider: e.target.value as UsageProvider })}>
+                {PROVIDERS.map((provider) => (
+                  <option key={provider} value={provider}>
+                    {PROVIDER_LABELS[provider]}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
           <div className="admin-field">
-            <label>Moeda</label>
-            <input value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} placeholder="USD" />
+            <label>
+              Moeda
+              <input value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} placeholder="USD" />
+            </label>
           </div>
           <div className="admin-field">
-            <label>Orçamento / crédito inicial</label>
-            <input type="number" step="0.01" min="0" value={form.initialValue} onChange={(e) => setForm({ ...form, initialValue: e.target.value })} />
+            <label>
+              Orçamento / crédito inicial
+              <input type="number" step="0.01" min="0" value={form.initialValue} onChange={(e) => setForm({ ...form, initialValue: e.target.value })} />
+            </label>
           </div>
           <div className="admin-field">
-            <label>Data de referência</label>
-            <input type="date" value={form.initialDate} onChange={(e) => setForm({ ...form, initialDate: e.target.value })} />
+            <label>
+              Data de referência
+              <input type="date" value={form.initialDate} onChange={(e) => setForm({ ...form, initialDate: e.target.value })} />
+            </label>
           </div>
           <div className="admin-field admin-field-full">
-            <label>Nota</label>
-            <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="Nº da fatura, plano contratado, etc." />
+            <label>
+              Nota
+              <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="Nº da fatura, plano contratado, etc." />
+            </label>
           </div>
         </div>
         <div className="admin-savebar">
@@ -367,24 +397,34 @@ function CurrencyRatesSection({ initial }: { initial: CurrencyRateEntry[] }) {
         </p>
         <div className="admin-fields">
           <div className="admin-field">
-            <label>De (moeda)</label>
-            <input value={form.currencyFrom} onChange={(e) => setForm({ ...form, currencyFrom: e.target.value.toUpperCase() })} placeholder="USD" />
+            <label>
+              De (moeda)
+              <input value={form.currencyFrom} onChange={(e) => setForm({ ...form, currencyFrom: e.target.value.toUpperCase() })} placeholder="USD" />
+            </label>
           </div>
           <div className="admin-field">
-            <label>Para (moeda)</label>
-            <input value={form.currencyTo} onChange={(e) => setForm({ ...form, currencyTo: e.target.value.toUpperCase() })} placeholder="BRL" />
+            <label>
+              Para (moeda)
+              <input value={form.currencyTo} onChange={(e) => setForm({ ...form, currencyTo: e.target.value.toUpperCase() })} placeholder="BRL" />
+            </label>
           </div>
           <div className="admin-field">
-            <label>Taxa</label>
-            <input type="number" step="0.0001" min="0" value={form.rate} onChange={(e) => setForm({ ...form, rate: e.target.value })} />
+            <label>
+              Taxa
+              <input type="number" step="0.0001" min="0" value={form.rate} onChange={(e) => setForm({ ...form, rate: e.target.value })} />
+            </label>
           </div>
           <div className="admin-field">
-            <label>Data da cotação</label>
-            <input type="date" value={form.rateDate} onChange={(e) => setForm({ ...form, rateDate: e.target.value })} />
+            <label>
+              Data da cotação
+              <input type="date" value={form.rateDate} onChange={(e) => setForm({ ...form, rateDate: e.target.value })} />
+            </label>
           </div>
           <div className="admin-field admin-field-full">
-            <label>Nota</label>
-            <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="Fonte da cotação (Banco Central, etc.)" />
+            <label>
+              Nota
+              <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="Fonte da cotação (Banco Central, etc.)" />
+            </label>
           </div>
         </div>
         <div className="admin-savebar">

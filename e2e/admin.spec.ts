@@ -59,6 +59,28 @@ test.describe("admin", () => {
     expect(bodyText).not.toMatch(/R\$\s*0,00/);
   });
 
+  // Fase 9B.0 (fechamento) — BudgetPanel contra o Supabase REAL de
+  // produção (migration desta fase não aplicada, proibido nesta etapa):
+  // deve degradar graciosamente para "ainda não disponível", nunca crash,
+  // nunca expor secret. Os demais estados (DISABLED/AUDIT/ENFORCE) usam
+  // fixtures em budget-panel-fixtures.spec.ts, já que o Supabase real não
+  // pode produzi-los sem a migration.
+  test("Custos e APIs: BudgetPanel degrada graciosamente quando budget_* não existe (migration não aplicada)", async ({ page }) => {
+    await login(page);
+    await page.goto(withBasePath("/admin/custos"));
+    await expect(page.getByRole("heading", { name: /Controle de orçamento/i })).toBeVisible();
+    await expect(page.getByText(/ainda não estão disponíveis neste ambiente/)).toBeVisible();
+    const bodyText = await page.locator("body").innerText();
+    expect(bodyText).not.toMatch(/sk-[a-zA-Z0-9]{20,}/);
+    expect(bodyText).not.toMatch(/eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}/);
+  });
+
+  test("Custos e APIs: usuário não autenticado é redirecionado para /admin/login", async ({ page, context }) => {
+    await context.clearCookies();
+    await page.goto(withBasePath("/admin/custos"));
+    await expect(page).toHaveURL(/\/admin\/login/);
+  });
+
   test("SEO e Medição: carrega, mostra Meta Pixel configurado e Google como pendente", async ({ page }) => {
     await login(page);
     await page.goto(withBasePath("/admin/seo"));

@@ -79,7 +79,22 @@ test.describe("axe: admin", () => {
     await page.getByRole("button", { name: /Acessar painel/i }).click();
     await page.waitForURL(/\/admin(?!\/login)/, { timeout: 10_000 });
 
-    for (const adminPath of ["/admin/segmentos", "/admin/configuracoes", "/admin/leads", "/admin/agenda", "/admin/empresas", "/admin/radar", "/admin/inteligencia"]) {
+    // Fase 9B.0 (fechamento) — /admin/custos ganhou o BudgetPanel. Contra o
+    // Supabase real (migration não aplicada em produção nesta fase),
+    // exercita o estado gracioso "tabelas ainda não disponíveis" — os
+    // demais estados (DISABLED/AUDIT/ENFORCE/thresholds) são cobertos via
+    // fixtures em budget-panel-fixtures.spec.ts, já que o Supabase real
+    // não pode produzi-los hoje sem aplicar a migration.
+    for (const adminPath of [
+      "/admin/segmentos",
+      "/admin/configuracoes",
+      "/admin/leads",
+      "/admin/agenda",
+      "/admin/empresas",
+      "/admin/radar",
+      "/admin/inteligencia",
+      "/admin/custos",
+    ]) {
       await page.goto(withBasePath(adminPath));
       const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
       try {
