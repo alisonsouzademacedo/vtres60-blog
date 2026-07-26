@@ -9,6 +9,7 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "migrate": "tsx scripts/migrate-to-supabase.ts",
+    "migrate:operations": "tsx scripts/migrate-operations-to-supabase.ts",
     "test": "vitest run",
     "test:e2e": "playwright test"
   },

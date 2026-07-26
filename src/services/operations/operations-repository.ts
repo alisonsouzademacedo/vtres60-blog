@@ -5,6 +5,27 @@ import { unstable_noStore as noStore } from "next/cache";
 import { companies as legacyCompanies, events as legacyEvents, segmentProfiles } from "@/data/content";
 import type { AdminLog, IntelligenceItem, Lead, ManagedCompany, ManagedEvent, ManagedSegment, MediaAsset, RadarSignal } from "@/types/operations";
 
+/**
+ * Fase 9B.1 — feature flags de fonte de verdade. Lidas em cada chamada (não
+ * em módulo-load) para que os testes possam alternar via `vi.stubEnv` sem
+ * reimport. Default "false" em ambos: produção continua em JSON até uma
+ * decisão explícita de corte (ver docs/implementacao-fase9b1-supabase-dominios.md).
+ * Radar e Inteligência compartilham uma única flag porque intelligence_items
+ * tem FK real para radar_signals no Postgres — não é possível ter uma em
+ * Supabase e a outra em JSON ao mesmo tempo.
+ *
+ * Import DINÂMICO e proposital: "./supabase-operations-repository" importa
+ * "@/lib/supabase", que cria o client do Supabase (e falha se as env vars
+ * não existirem) já no module-load. Um import estático no topo deste arquivo
+ * quebraria toda leitura/escrita em JSON (inclusive com a flag desligada,
+ * inclusive em testes sem Supabase configurado) por causa de um provedor que
+ * nem está em uso nesse caminho. Com import dinâmico, o client só é criado
+ * quando uma das flags acima está realmente "true".
+ */
+const companiesSupabaseSource = () => process.env.COMPANIES_SUPABASE_SOURCE === "true";
+const radarIntelligenceSupabaseSource = () => process.env.RADAR_INTELLIGENCE_SUPABASE_SOURCE === "true";
+const loadSupabaseOps = () => import("./supabase-operations-repository").then((mod) => mod.supabaseOperationsRepository);
+
 type Collection="segments"|"events"|"media"|"leads"|"logs"|"companies"|"radarSignals"|"intelligenceItems";
 type Map={segments:ManagedSegment;events:ManagedEvent;media:MediaAsset;leads:Lead;logs:AdminLog;companies:ManagedCompany;radarSignals:RadarSignal;intelligenceItems:IntelligenceItem};
 const contentDir=path.join(process.cwd(),"src","content"),uploadsDir=path.join(process.cwd(),"public","uploads");
@@ -22,9 +43,21 @@ async function sweepExpiry<K extends "radarSignals"|"intelligenceItems">(collect
 export const operationsRepository={
   listSegments:()=>read("segments"),getSegment:(value:string)=>get("segments",value),createSegment:(input:Omit<ManagedSegment,"id"|"createdAt"|"updatedAt">)=>create("segments",input),updateSegment:(id:string,patch:Partial<ManagedSegment>)=>update("segments",id,patch),deleteSegment:(id:string)=>remove("segments",id),
   listEvents:()=>read("events"),getEvent:(value:string)=>get("events",value),createEvent:(input:Omit<ManagedEvent,"id"|"createdAt"|"updatedAt">)=>create("events",input),updateEvent:(id:string,patch:Partial<ManagedEvent>)=>update("events",id,patch),deleteEvent:(id:string)=>remove("events",id),
-  listCompanies:()=>read("companies"),getCompany:(value:string)=>get("companies",value),createCompany:(input:Omit<ManagedCompany,"id"|"createdAt"|"updatedAt">)=>create("companies",input),updateCompany:(id:string,patch:Partial<ManagedCompany>)=>update("companies",id,patch),deleteCompany:(id:string)=>remove("companies",id),
-  listRadarSignals:()=>sweepExpiry("radarSignals"),getRadarSignal:async(value:string)=>(await sweepExpiry("radarSignals")).find(item=>item.id===value||undefined)??(await get("radarSignals",value)),createRadarSignal:(input:Omit<RadarSignal,"id"|"createdAt"|"updatedAt">)=>create("radarSignals",input),updateRadarSignal:(id:string,patch:Partial<RadarSignal>)=>update("radarSignals",id,patch),deleteRadarSignal:(id:string)=>remove("radarSignals",id),
-  listIntelligenceItems:()=>sweepExpiry("intelligenceItems"),getIntelligenceItem:async(value:string)=>(await sweepExpiry("intelligenceItems")).find(item=>item.id===value)??(await get("intelligenceItems",value)),createIntelligenceItem:(input:Omit<IntelligenceItem,"id"|"createdAt"|"updatedAt">)=>create("intelligenceItems",input),updateIntelligenceItem:(id:string,patch:Partial<IntelligenceItem>)=>update("intelligenceItems",id,patch),deleteIntelligenceItem:(id:string)=>remove("intelligenceItems",id),
+  listCompanies:async()=>companiesSupabaseSource()?(await loadSupabaseOps()).listCompanies():read("companies"),
+  getCompany:async(value:string)=>companiesSupabaseSource()?(await loadSupabaseOps()).getCompany(value):get("companies",value),
+  createCompany:async(input:Omit<ManagedCompany,"id"|"createdAt"|"updatedAt">)=>companiesSupabaseSource()?(await loadSupabaseOps()).createCompany(input):create("companies",input),
+  updateCompany:async(id:string,patch:Partial<ManagedCompany>)=>companiesSupabaseSource()?(await loadSupabaseOps()).updateCompany(id,patch):update("companies",id,patch),
+  deleteCompany:async(id:string)=>companiesSupabaseSource()?(await loadSupabaseOps()).deleteCompany(id):remove("companies",id),
+  listRadarSignals:async()=>radarIntelligenceSupabaseSource()?(await loadSupabaseOps()).listRadarSignals():sweepExpiry("radarSignals"),
+  getRadarSignal:async(value:string)=>radarIntelligenceSupabaseSource()?(await loadSupabaseOps()).getRadarSignal(value):(await sweepExpiry("radarSignals")).find(item=>item.id===value||undefined)??(await get("radarSignals",value)),
+  createRadarSignal:async(input:Omit<RadarSignal,"id"|"createdAt"|"updatedAt">)=>radarIntelligenceSupabaseSource()?(await loadSupabaseOps()).createRadarSignal(input):create("radarSignals",input),
+  updateRadarSignal:async(id:string,patch:Partial<RadarSignal>)=>radarIntelligenceSupabaseSource()?(await loadSupabaseOps()).updateRadarSignal(id,patch):update("radarSignals",id,patch),
+  deleteRadarSignal:async(id:string)=>radarIntelligenceSupabaseSource()?(await loadSupabaseOps()).deleteRadarSignal(id):remove("radarSignals",id),
+  listIntelligenceItems:async()=>radarIntelligenceSupabaseSource()?(await loadSupabaseOps()).listIntelligenceItems():sweepExpiry("intelligenceItems"),
+  getIntelligenceItem:async(value:string)=>radarIntelligenceSupabaseSource()?(await loadSupabaseOps()).getIntelligenceItem(value):(await sweepExpiry("intelligenceItems")).find(item=>item.id===value)??(await get("intelligenceItems",value)),
+  createIntelligenceItem:async(input:Omit<IntelligenceItem,"id"|"createdAt"|"updatedAt">)=>radarIntelligenceSupabaseSource()?(await loadSupabaseOps()).createIntelligenceItem(input):create("intelligenceItems",input),
+  updateIntelligenceItem:async(id:string,patch:Partial<IntelligenceItem>)=>radarIntelligenceSupabaseSource()?(await loadSupabaseOps()).updateIntelligenceItem(id,patch):update("intelligenceItems",id,patch),
+  deleteIntelligenceItem:async(id:string)=>radarIntelligenceSupabaseSource()?(await loadSupabaseOps()).deleteIntelligenceItem(id):remove("intelligenceItems",id),
   listMedia:()=>read("media"),getMedia:(id:string)=>get("media",id),createMedia:(input:Omit<MediaAsset,"id"|"createdAt"|"updatedAt">)=>create("media",input),updateMedia:(id:string,patch:Partial<MediaAsset>)=>update("media",id,patch),
   async deleteMedia(id:string){const item=await get("media",id) as MediaAsset|undefined;if(!item)return false;const filename=path.basename(item.url);await fs.unlink(path.join(uploadsDir,filename)).catch(()=>undefined);return remove("media",id)},
   async renameMedia(id:string,name:string){const item=await get("media",id) as MediaAsset|undefined;if(!item)return;const extension=path.extname(item.filename),base=name.replace(path.extname(name),"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9-_]+/g,"-").replace(/(^-|-$)/g,"")||"imagem";let filename=`${base}${extension}`,counter=2;while(filename!==item.filename){try{await fs.access(path.join(uploadsDir,filename));filename=`${base}-${counter++}${extension}`}catch{break}}const oldPath=path.join(uploadsDir,path.basename(item.url)),newPath=path.join(uploadsDir,filename);if(oldPath!==newPath)await fs.rename(oldPath,newPath);return update("media",id,{filename,url:`/uploads/${filename}`} as Partial<MediaAsset>)},
