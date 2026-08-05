@@ -70,9 +70,58 @@ Após o fix, confirmado via chamada HTTP real: `GET /admin/empresas/company-weg`
 
 ## Produção
 
-`PRODUCTION_CHANGED=false` no código/config: nenhuma alteração em `/home/pedro/vtres60-blog`, nenhuma migration aplicada a nenhum banco de produção, nenhum flag ativado em `.env.production`/`ecosystem.config.js`.
+`PRODUCTION_CODE_CHANGED=false`: nenhuma alteração de código/config em `/home/pedro/vtres60-blog`, nenhuma migration nova aplicada, nenhum flag ativado em `.env.production`/`ecosystem.config.js`. **Mas houve, sim, uma escrita real de dados em produção durante a validação desta fase — ver "Incidente" abaixo. A afirmação original desta seção, "PRODUCTION_CHANGED=false", estava incorreta e foi corrigida no fechamento de 2026-08-05.**
 
-**Incidente real durante a validação, encontrado e corrigido na hora**: ao testar o script de migração contra um ambiente isolado, uma janela em que `.env.local` já tinha sido restaurado para as credenciais reais de produção enquanto variáveis de ambiente de linha de comando ainda apontavam para o stack isolado fez com que o `dotenv override:true` do script priorizasse `.env.local` — o script rodou de fato contra o Supabase real de produção e inseriu as 6 empresas reais na tabela `companies` (vazia até então). **Detectado imediatamente** (verificação de contagem pós-execução, prática já estabelecida no projeto), **revertido imediatamente** (`DELETE` pelos 6 ids exatos, confirmado `count=0` de novo). Nenhum dado inventado foi inserido (eram as 6 empresas reais, com os UUIDs determinísticos corretos) e a flag `COMPANIES_SUPABASE_SOURCE` nunca esteve ativa em produção — o site público continuou servindo de `companies.json` o tempo todo, sem impacto funcional real. `PRODUCTION_PROCESS_INCIDENT=false` (nenhum processo PM2 foi tocado). A partir desse ponto, todo teste subsequente contra o stack isolado verificou explicitamente a URL alvo antes de qualquer escrita.
+**Incidente real durante a validação (não apenas um "quase incidente")**: ao testar o script de migração contra um ambiente isolado, uma janela em que `.env.local` já tinha sido restaurado para as credenciais reais de produção enquanto variáveis de ambiente de linha de comando ainda apontavam para o stack isolado fez com que o `dotenv override:true` do script priorizasse `.env.local` — o script rodou de fato contra o Supabase real de produção e inseriu as 6 empresas reais na tabela `companies` (vazia até então) por uma janela real, breve mas real. **Detectado imediatamente** (verificação de contagem pós-execução, prática já estabelecida no projeto), **revertido imediatamente** (`DELETE` pelos 6 ids exatos, confirmado `count=0` de novo). Nenhum dado inventado foi inserido (eram as 6 empresas reais, com os UUIDs determinísticos corretos), a flag `COMPANIES_SUPABASE_SOURCE` nunca esteve ativa em produção, e o site público continuou servindo de `companies.json` o tempo todo — nenhum usuário real viu os dados temporariamente presentes na tabela. `PRODUCTION_PROCESS_INCIDENT=false` (nenhum processo PM2 foi tocado). Flags corretas para este incidente:
+
+```text
+PRODUCTION_DATA_INCIDENT=true
+PRODUCTION_DATA_RESTORED=true
+PRODUCTION_PROCESS_INCIDENT=false
+PUBLIC_IMPACT_OBSERVED=false
+DATA_LOSS=false
+```
+
+## Fechamento (2026-08-05) — proteção de destino contra escrita acidental em produção
+
+Ver `docs/runbook-migration-safety.md` para o guia operacional completo. Resumo do que foi corrigido:
+
+- **Causa raiz confirmada**: `dotenv.config({override:true})`, presente em todo script de escrita deste projeto (`migrate-operations-to-supabase.ts`, `migrate-to-supabase.ts`, `backfill-excerpt-impact.ts`, `backfill-segmentos.ts`), fazia `.env.local` sempre vencer sobre qualquer variável já presente no processo — o inverso do que a intuição de um operador esperaria ao passar uma variável explícita na linha de comando.
+- **Auditoria global**: todo script em `scripts/` que pode escrever em Supabase/Postgres/Storage foi mapeado (`migrate-operations-to-supabase.ts`, `migrate-to-supabase.ts` — que antes não tinha NENHUM gate `--apply`, escrevia incondicionalmente —, `backfill-excerpt-impact.ts`, `fase5-dry-run.mts`). `backfill-segmentos.ts` é só leitura (nunca escreve no banco) — recebeu a resolução segura de env por consistência, sem o guard de escrita completo.
+- **`scripts/lib/safe-target.ts`** (novo, compartilhado): `loadEnvSafely()` (nunca `override:true` — variável já presente no processo sempre vence; conflito real entre processo e arquivo aborta com `ENV_DESTINATION_CONFLICT`, nunca decide sozinho), `resolveDestination()` (identifica `LOCAL`/`TEST`/`STAGING`/`PRODUCTION`/`UNKNOWN` a partir da URL, nunca lê a service role key), `assertSafeToWrite()` (`FAIL_CLOSED` para destino `UNKNOWN`; contra o project ref de produção confirmado — `fdsojpwznvephwdoghbn` — exige simultaneamente `--allow-production`, `--apply`, dry-run desativado, manifest gerado, idempotency key e ator registrado), `buildManifest()`/`writeManifest()` (manifest determinístico — mesmo idempotencyKey para a mesma operação repetida —, gravado em `.migration-manifests/`, fora do controle de versão, nunca contém secrets).
+- **Todos os 4 scripts de escrita real** foram atualizados para usar essa proteção compartilhada. `migrate-to-supabase.ts` ganhou, pela primeira vez, um modo dry-run por padrão (antes escrevia sempre, sem nenhuma flag `--apply`).
+- **Validação real, não só unitária**: com `.env.local` (que já estava restaurado às credenciais reais de produção) apontando de fato para `https://fdsojpwznvephwdoghbn.supabase.co`, rodar `migrate-operations-to-supabase.ts --apply` (sem `--allow-production`) — a réplica exata do cenário que causou o incidente original — abortou corretamente com `FAIL_CLOSED` **antes** de qualquer `upsert`, com manifest gerado e destino identificado corretamente como `PRODUCTION`. Contagem confirmada em produção antes/depois: `0/0/0`, sem alteração. Separadamente, contra um stack Supabase local isolado (Postgres+PostgREST, descartável, nunca reaproveitando `v360-fase5-db-lab` de outro projeto), o caminho de sucesso completo (`--apply` sem precisar de `--allow-production`, já que o destino é `LOCAL`) foi executado duas vezes seguidas: 6 inserções na primeira, 0 inserções/6 atualizações na segunda, mesmo `idempotencyKey` nas duas execuções — idempotência real, não apenas testada com mock.
+- **62 testes novos** (32 em `safe-target.test.ts`, 8 em `migrate-operations-to-supabase.test.ts`, 5 em `migrate-to-supabase.test.ts`, 2 em `scripts-safety-audit.test.ts` — uma auditoria automática que falha se um script novo de escrita não importar a proteção, ou se qualquer script voltar a usar `override:true` em código real). Cobrem os 22 cenários exigidos: env explícito local, `.env.local` isolado, conflito entre os dois, destino desconhecido, os 7 requisitos individuais do guard de produção (cada um isoladamente ausente bloqueia), execução local e de teste válidas, dry-run nunca escreve, escrita bloqueada nunca chama Supabase, secrets nunca aparecem em manifest/log, UUID v5 permanece determinístico, segunda execução não duplica, rollback preview incluído no manifest, e a auditoria automática de todos os scripts.
+- **`TEST`/`STAGING` no tipo de destino**: presentes porque o plano exige a classificação completa, mas este projeto não tem projeto Supabase real de staging/test hospedado — todo teste isolado usa Postgres+PostgREST local via Docker (`kind=LOCAL`). A função nunca infere `TEST`/`STAGING` a partir de padrão de hostname (seria dedução); só reconhece esses valores via `SAFE_TARGET_ENV_LABEL` declarado explicitamente por um operador, e mesmo assim nunca reclassifica o project ref real de produção.
+- **Regressão**: lint limpo, typecheck limpo, Vitest 628/2 skipped (era 581/2 — sem redução, +47 líquido), build de produção limpo (flags ligadas e desligadas), secrets scan limpo. Nenhuma UI pública alterada nesta etapa — Playwright/axe não re-executados (não exigidos pelo plano para mudanças sem superfície pública).
+- **Produção**: nenhuma escrita nesta etapa de fechamento (confirmado `0/0/0` antes e depois). PM2: os 4 processos deste servidor mostraram restart_count=0 com PIDs novos e uptime idêntico entre si (~2h19min) no início desta sessão — consistente com um reboot da máquina ocorrido entre sessões, não com qualquer ação tomada aqui (nenhum comando `pm2`/`pkill`/`kill` foi executado nesta etapa). Site público confirmado saudável via HTTPS real (200 após redirect).
+
+Flags finais desta etapa:
+
+```text
+ENV_PRECEDENCE_ROOT_CAUSE_CONFIRMED=true
+AFFECTED_SCRIPTS_MAPPED=true
+FAIL_CLOSED_DESIGN_VALIDATED=true
+PRODUCTION_TARGET_GUARD_READY=true
+DRY_RUN_DEFAULT=true
+PRODUCTION_REQUIRES_EXPLICIT_ALLOW=true
+PROJECT_REF_VALIDATION_READY=true
+COMPANY_LEGACY_ID_MAPPING_VALID=true
+COMPANY_UUIDS_DETERMINISTIC=true
+COMPANY_MIGRATION_IDEMPOTENT=true
+LEGACY_ADMIN_URLS_SAFE=true
+RADAR_SUPABASE_SOURCE=false
+INTELLIGENCE_SUPABASE_SOURCE=false
+COMPANIES_SUPABASE_SOURCE=false
+DATA_LOSS=false
+PRODUCTION_DATA_INCIDENT=true
+PRODUCTION_DATA_RESTORED=true
+PRODUCTION_PROCESS_INCIDENT=false
+PUBLIC_IMPACT_OBSERVED=false
+PHASE_9B1_COMPLETE=true
+READY_FOR_PHASE_9B2=true
+READY_FOR_DEPLOY=false
+```
 
 ## Testes e validação
 

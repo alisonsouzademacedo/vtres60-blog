@@ -16,12 +16,15 @@
  * Nunca altera: texto do post, categoria, tags, companies.
  * Idempotente: rodar de novo produz o mesmo relatório (sem side-effects).
  */
-import { config } from "dotenv";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import { z } from "zod";
+import { describeDestination, loadEnvSafely, resolveDestination } from "./lib/safe-target";
 
-config({ path: path.join(process.cwd(), ".env.local"), override: true });
+// Fechamento da Fase 9B.1: nunca mais dotenv.config({override:true}) — ver
+// scripts/lib/safe-target.ts. Este script nunca escreve no Supabase (só lê
+// posts e grava um relatório .md local), então não precisa do guard de
+// produção — só da resolução segura de env por consistência.
 
 export type BackfillConfidence = "HIGH_CONFIDENCE" | "AMBIGUOUS" | "NO_SEGMENT" | "ERROR";
 
@@ -142,9 +145,11 @@ function renderReport(rows: BackfillRow[], validSegmentNames: string): string {
 }
 
 async function main() {
+  loadEnvSafely();
   const { supabaseAdmin, llm, loadValidSegments, filterValidSegmentSlugs, formatSegmentsForPrompt } = await loadIoDeps();
 
-  console.log("Modo: DRY-RUN (nenhuma escrita no banco será executada — este script não implementa --apply)\n");
+  console.log("Modo: DRY-RUN (nenhuma escrita no banco será executada — este script não implementa --apply)");
+  console.log(`Destino (só leitura): ${describeDestination(resolveDestination())}\n`);
 
   const validSegments = await loadValidSegments();
   const segmentsBlock = formatSegmentsForPrompt(validSegments);

@@ -3,6 +3,7 @@ node_modules
 out
 .env*
 !.env.example
+.migration-manifests/
 *.log
 .DS_Store
 .vercel

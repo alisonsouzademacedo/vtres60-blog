@@ -1,6 +1,6 @@
 # Runbook — Migração JSON → Supabase (Radar, Inteligência, Empresas)
 
-Guia operacional para migrar de fato os três domínios da Fase 9B.1 quando Pedro autorizar o corte para produção. Ver `docs/implementacao-fase9b1-supabase-dominios.md` para o racional arquitetural completo.
+Guia operacional para migrar de fato os três domínios da Fase 9B.1 quando Pedro autorizar o corte para produção. Ver `docs/implementacao-fase9b1-supabase-dominios.md` para o racional arquitetural completo e `docs/runbook-migration-safety.md` para a proteção de destino aplicada a este script depois do incidente real de 2026-08-05.
 
 ## Estado atual (ao final da Fase 9B.1)
 
@@ -11,7 +11,7 @@ Guia operacional para migrar de fato os três domínios da Fase 9B.1 quando Pedr
 1. Confirmar que a migration `supabase-radar-intelligence-companies-schema-fase8d.sql` já está aplicada em produção (já está, desde a Fase 8E — reconfirmar via `list_tables`).
 2. Rodar `npm run migrate:operations -- --preview` **contra o `.env.production` real** (nunca contra `.env.local` de desenvolvimento) para conferir o mapa `legacy_id → uuid → slug → name` e o resumo de inserções/atualizações antes de aplicar.
 3. Revisar o preview com Pedro — nenhuma migração de dado real deve rodar sem essa conferência.
-4. Rodar `npm run migrate:operations -- --apply` **uma única vez**, com `.env.production` carregado corretamente (mesma disciplina de `pm2 restart ecosystem.config.js --only <name> --update-env` — nunca confiar em variável de ambiente já presente no shell, sempre forçar o arquivo certo).
+4. Rodar `npm run migrate:operations -- --apply --allow-production` **uma única vez**, com `.env.production` carregado corretamente (mesma disciplina de `pm2 restart ecosystem.config.js --only <name> --update-env` — nunca confiar em variável de ambiente já presente no shell, sempre forçar o arquivo certo). `--allow-production` é obrigatório desde o fechamento de 2026-08-05: sem ele, `assertSafeToWrite` bloqueia a escrita antes de qualquer `upsert` (ver `docs/runbook-migration-safety.md`).
 5. Confirmar via SQL real (`select count(*), count(distinct slug), count(distinct id) from companies`) que exatamente 6 linhas existem, sem duplicata.
 6. Só depois disso, ativar as flags em `ecosystem.config.js`/`.env.production` e reiniciar `vtres60-blog` (`pm2 restart ecosystem.config.js --only vtres60-blog --update-env`).
 

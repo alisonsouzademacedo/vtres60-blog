@@ -14,8 +14,6 @@
  *   npx tsx scripts/backfill-excerpt-impact.ts            (dry-run, padrao)
  *   npx tsx scripts/backfill-excerpt-impact.ts --apply     (aplica no Supabase)
  */
-import { config } from "dotenv";
-import path from "node:path";
 import { z } from "zod";
 import {
   EXCERPT_IMPACT_OVERLAP_THRESHOLD,
@@ -26,10 +24,18 @@ import {
   validateExcerpt,
   validateImpact,
 } from "../src/lib/agent/text-guards";
+import {
+  assertSafeToWrite,
+  buildManifest,
+  describeDestination,
+  loadEnvSafely,
+  printManifest,
+  resolveDestination,
+  writeManifest,
+} from "./lib/safe-target";
 
-// override: true — mesmo motivo de scripts/migrate-to-supabase.ts: este
-// ambiente pode ja ter SUPABASE_*/OPENAI_* definidas globalmente.
-config({ path: path.join(process.cwd(), ".env.local"), override: true });
+// Fechamento da Fase 9B.1: nunca mais dotenv.config({override:true}) — ver
+// scripts/lib/safe-target.ts. loadEnvSafely() é chamado dentro de main().
 
 export const VALIDATED_IDS = [
   "c875a805-f2f9-4c02-a85a-e4c098f9c639", // Grupo RIMA: Inovação e Liderança na Metalurgia Brasileira
@@ -196,10 +202,15 @@ async function loadIoDeps() {
 }
 
 async function main() {
+  loadEnvSafely();
+
   const apply = process.argv.includes("--apply");
+  const allowProduction = process.argv.includes("--allow-production");
+  const destination = resolveDestination();
   const { supabaseAdmin, llm } = await loadIoDeps();
 
-  console.log(`Modo: ${apply ? "APLICAÇÃO REAL" : "DRY-RUN (nenhum UPDATE será executado)"}\n`);
+  console.log(`Modo: ${apply ? "APLICAÇÃO REAL" : "DRY-RUN (nenhum UPDATE será executado)"}`);
+  console.log(`Destino: ${describeDestination(destination)}\n`);
   console.log(`IDs validados: ${VALIDATED_IDS.length}\n`);
 
   const { data: rows, error } = await supabaseAdmin
@@ -255,6 +266,18 @@ async function main() {
   const ambiguous = entries.filter(([, v]) => v.classification.status === "ambiguous");
   console.log(`Aprovados: ${approved.length} | Rejeitados: ${rejected.length} | Ambíguos: ${ambiguous.length}\n`);
 
+  const manifest = buildManifest({
+    script: "backfill-excerpt-impact.ts",
+    destination,
+    mode: apply ? "apply" : "dry-run",
+    entities: "posts (excerpt/impact)",
+    quantity: approved.length,
+    ids: approved.map(([id]) => id),
+    rollbackPlan: "restaurar excerpt/impact/content/seo.metaDescription originais a partir do snapshot em docs/backup-fase2-saneamento-*.json (ver cabeçalho deste arquivo).",
+  });
+  printManifest(manifest);
+  await writeManifest(manifest);
+
   if (!apply) {
     console.log("Dry-run concluído. Nenhum UPDATE foi executado. Rode com --apply para aplicar somente os aprovados.");
     return;
@@ -263,6 +286,15 @@ async function main() {
     console.log("Nenhum registro aprovado — nada a aplicar.");
     return;
   }
+
+  assertSafeToWrite(destination, {
+    allowProduction,
+    apply: true,
+    dryRun: false,
+    manifestGenerated: true,
+    idempotencyKey: manifest.idempotencyKey,
+    actor: manifest.actor,
+  });
 
   console.log("=== VERIFICAÇÃO DE CONCORRÊNCIA ===\n");
   const approvedIds = approved.map(([id]) => id);

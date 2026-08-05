@@ -9,7 +9,14 @@ import { internalAuditorNode } from "../src/lib/agent/nodes/internal-auditor";
 import { semanticDedupeNode } from "../src/lib/agent/nodes/semantic-dedupe";
 import { imageProcessorNode } from "../src/lib/agent/nodes/image-processor";
 import { supabaseAdmin } from "../src/lib/supabase";
+import { assertSafeToWrite, describeDestination, resolveDestination } from "./lib/safe-target";
 import type { AgentState } from "../src/lib/agent/state";
+
+// Fechamento da Fase 9B.1 — este script não chama dotenv (usa a env já
+// presente no processo), mas realiza uma escrita real no Storage (remoção
+// do objeto de smoke-test) — precisa da mesma confirmação de destino que
+// qualquer outro script de escrita. Contra o project ref de produção,
+// exige --allow-production explicitamente (ver scripts/lib/safe-target.ts).
 
 const FIXTURE_SOURCE_TEXT = `
 Sindicato das Indústrias Metalúrgicas anuncia acordo coletivo com reajuste de 6% para 40 mil trabalhadores
@@ -62,6 +69,17 @@ function initialState(): AgentState {
 }
 
 async function main() {
+  const destination = resolveDestination();
+  console.log("Destino:", describeDestination(destination));
+  assertSafeToWrite(destination, {
+    allowProduction: process.argv.includes("--allow-production"),
+    apply: true,
+    dryRun: false,
+    manifestGenerated: true,
+    idempotencyKey: "fase5-dry-run-smoke-test",
+    actor: process.env.USER ?? process.env.USERNAME ?? "desconhecido",
+  });
+
   const { count: postsBefore } = await supabaseAdmin.from("posts").select("id", { count: "exact", head: true });
   console.log("posts_count_before:", postsBefore);
 
